@@ -1,0 +1,28 @@
+{
+  "nome": "PROSA40h",
+  "descricao": "PROSA 40 horas - versões base para todos componentes",
+  "css": "/projetos/cursos/PROSA/40H/2026-1/bundle.css",
+  "js": "/projetos/cursos/PROSA/40H/2026-1/bundle.js",
+  "componentes": {
+    "citacao": {
+      "model": "m1",
+      "version": "v1"
+    },
+    "atencao": {
+      "model": "m1",
+      "version": "v1"
+    },
+    "carrossel": {
+      "model": "m1",
+      "version": "v1"
+    },
+    "sanfona": {
+      "model": "m1",
+      "version": "v1"
+    },
+    "flipcards": {
+      "model": "m1",
+      "version": "v1"
+    }
+  }
+}

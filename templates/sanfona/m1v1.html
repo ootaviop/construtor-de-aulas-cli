@@ -1,0 +1,47 @@
+{# Template: sanfona/m1v1.html #}
+{# Dados esperados: { 
+     id: string, 
+     secoes: [ 
+       { cabecalho: string (HTML), corpo: string (HTML) }, 
+       ... 
+     ],
+     fonte: string (HTML, opcional)
+   } 
+#}
+
+<div class="container secao sanfona-m1v1" id="{{ id }}">
+    <div class="row">
+        <div class="col-sm-12 col-md-11 col-lg-11 col-xl-9 m-auto">
+            <div class="accordion-container">
+                <p class="dica-navegacao">Clique nos títulos abaixo</p>
+                
+                {% for secao in secoes %}
+                <div class="accordion-item" id="{{ id }}-item-{{ loop.index0 }}">
+                    {# Cabeçalho - aria-controls aponta para o corpo #}
+                    <a aria-expanded="false"
+                       aria-controls="{{ id }}-corpo-{{ loop.index0 }}"
+                       type="button"
+                       class="accordion-header"
+                       id="{{ id }}-header-{{ loop.index0 }}">
+                        {{ secao.cabecalho | safe }}
+                    </a>
+                    
+                    {# Corpo - id corresponde ao aria-controls do cabeçalho #}
+                    <div class="accordion-content" id="{{ id }}-corpo-{{ loop.index0 }}">
+                        <div class="accordion-content-inner">
+                            {{ secao.corpo | safe }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                
+                {# Fonte opcional #}
+                {% if fonte %}
+                <div class="sanfona-fonte">
+                    {{ fonte | safe }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>

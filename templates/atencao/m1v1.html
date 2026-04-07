@@ -1,0 +1,18 @@
+{# Template: atencao/m1v1.html #}
+{# Dados esperados: { id: string, conteudo: string (HTML) } #}
+
+<div class="container secao atencao-m1v1" id="{{ id }}">
+    <div class="row">
+        <div class="col-sm-12 col-md-11 col-lg-11 col-xl-9 m-auto">
+            <div class="destaque atencao">
+                <div class="cabecalho">
+                    <div class="div-imagem"></div>
+                    <h4>Atenção</h4>
+                </div>
+                <div class="corpo">
+                    {{ conteudo | safe }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

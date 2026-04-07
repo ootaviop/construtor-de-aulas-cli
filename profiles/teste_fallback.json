@@ -1,0 +1,28 @@
+{
+  "nome": "teste_fallback",
+  "descricao": "Profile para testar fallback - sanfona m2v1 não existe",
+  "css": "",
+  "js": "",
+  "componentes": {
+    "citacao": {
+      "model": "m1",
+      "version": "v1"
+    },
+    "atencao": {
+      "model": "m1",
+      "version": "v1"
+    },
+    "carrossel": {
+      "model": "m1",
+      "version": "v1"
+    },
+    "sanfona": {
+      "model": "m2",
+      "version": "v1"
+    },
+    "flipcards": {
+      "model": "m1",
+      "version": "v1"
+    }
+  }
+}

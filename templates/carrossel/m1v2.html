@@ -1,0 +1,78 @@
+{# Template: carrossel/m1v2.html #}
+{# Versão 2: Adiciona contador de slides e estrutura de navegação aprimorada #}
+{# Dados esperados: { 
+     id: string, 
+     slides: [ { conteudo: string (HTML) }, ... ] 
+   } 
+#}
+
+<div class="container secao carrossel-m1v2" id="{{ id }}">
+    <div class="row">
+        <div class="col-sm-12 col-md-11 col-lg-11 col-xl-9 m-auto">
+            {# Header com dica e contador #}
+            <div class="carrossel-header">
+                <p class="dica-navegacao">
+                    <span class="icon-swipe">👆</span>
+                    Use as setas para navegar
+                </p>
+                <p class="slide-counter">
+                    <span class="current-slide">1</span> / <span class="total-slides">{{ slides|length }}</span>
+                </p>
+            </div>
+            
+            <div class="carrossel-wrapper">
+                <div class="carousel slide"
+                     data-ride="carousel"
+                     data-interval="false"
+                     data-wrap="false"
+                     data-keyboard="true"
+                     id="carousel-{{ id }}">
+                    
+                    {# Slides #}
+                    <div class="carousel-inner">
+                        {% for slide in slides %}
+                        <div class="carousel-item{% if loop.first %} active{% endif %}"
+                             data-slide-index="{{ loop.index }}">
+                            <div class="slide-content">
+                                <div class="slide-body">
+                                    {{ slide.conteudo | safe }}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    {# Controles laterais #}
+                    <div class="carousel-controls">
+                        <button class="carousel-control-prev" 
+                                type="button"
+                                data-target="#carousel-{{ id }}"
+                                data-slide="prev"
+                                aria-label="Slide anterior">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        </button>
+                        <button class="carousel-control-next"
+                                type="button"
+                                data-target="#carousel-{{ id }}"
+                                data-slide="next"
+                                aria-label="Próximo slide">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        </button>
+                    </div>
+                    
+                    {# Indicadores (dots) #}
+                    <div class="carousel-indicators-wrapper">
+                        <ol class="carousel-indicators">
+                            {% for slide in slides %}
+                            <li data-target="#carousel-{{ id }}"
+                                data-slide-to="{{ loop.index0 }}"
+                                {% if loop.first %}class="active"{% endif %}
+                                aria-label="Ir para slide {{ loop.index }}"></li>
+                            {% endfor %}
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

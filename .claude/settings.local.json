@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p tools examples tests)",
+      "Bash(mv gerar_template.py tools/)",
+      "Bash(mv aula.docx aula.html test_input.html examples/)",
+      "Bash(mv test_pipeline.py test_profiles.py test_templates.py tests/)",
+      "Bash(pip install:*)",
+      "Bash(python tests/test_templates.py)",
+      "Bash(python construtor_cli.py examples/aula.docx --mock -v --dry-run)",
+      "Bash(python tests/test_pipeline.py)"
+    ]
+  }
+}

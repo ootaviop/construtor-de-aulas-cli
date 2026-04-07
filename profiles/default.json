@@ -1,0 +1,28 @@
+{
+  "nome": "default",
+  "descricao": "Profile padrão com versões m1v1 para todos os componentes",
+  "css": "/projetos/cursos/default/bundle.css",
+  "js": "/projetos/cursos/default/bundle.js",
+  "componentes": {
+    "citacao": {
+      "model": "m1",
+      "version": "v1"
+    },
+    "atencao": {
+      "model": "m1",
+      "version": "v1"
+    },
+    "carrossel": {
+      "model": "m1",
+      "version": "v1"
+    },
+    "sanfona": {
+      "model": "m1",
+      "version": "v1"
+    },
+    "flipcards": {
+      "model": "m1",
+      "version": "v1"
+    }
+  }
+}

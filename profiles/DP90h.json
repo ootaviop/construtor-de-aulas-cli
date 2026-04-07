@@ -1,0 +1,28 @@
+{
+  "nome": "DP90h",
+  "descricao": "Diretores e Professores 90h - carrossel v2, sanfona com estilo alternativo",
+  "css": "/projetos/cursos/DP/90H/2026-1/bundle.css",
+  "js": "/projetos/cursos/DP/90H/2026-1/bundle.js",
+  "componentes": {
+    "citacao": {
+      "model": "m1",
+      "version": "v1"
+    },
+    "atencao": {
+      "model": "m1",
+      "version": "v1"
+    },
+    "carrossel": {
+      "model": "m1",
+      "version": "v2"
+    },
+    "sanfona": {
+      "model": "m1",
+      "version": "v1"
+    },
+    "flipcards": {
+      "model": "m1",
+      "version": "v1"
+    }
+  }
+}
