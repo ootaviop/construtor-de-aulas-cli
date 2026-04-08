@@ -1,0 +1,18 @@
+# Variáveis de ambiente (chaves de API, segredos)
+.env
+
+# Cache Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Saída gerada
+output/
+
+# Ambientes virtuais
+.venv/
+venv/
+env/
+
+# Editor
+.DS_Store
