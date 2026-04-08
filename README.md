@@ -2,11 +2,36 @@
 
 Converte `.docx` com tags customizadas em HTML com componentes interativos.
 
-## Uso com Docker (recomendado)
+## Uso (recomendado)
 
 ### Pré-requisitos
 
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) instalado
+
+### Iniciar
+
+```bash
+curl -O https://raw.githubusercontent.com/midiadigital123/construtor-de-aulas-cli/main/start.sh && bash start.sh
+```
+
+Na primeira execução o script cria o arquivo `.env` e pede para preencher a chave de API. Depois rode novamente:
+
+```bash
+bash start.sh
+```
+
+Acesse **http://localhost:8000** no navegador.
+
+Para parar: `Ctrl+C` ou `docker compose down`.
+
+---
+
+## Uso com Docker (desenvolvimento)
+
+### Pré-requisitos
+
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) instalado
+- Repositório clonado
 
 ### Configuração
 
@@ -121,3 +146,9 @@ python construtor_cli.py aula.docx --mock
 pip install -r requirements.txt
 uvicorn api:app --reload --port 8000
 ```
+
+# Próximas modificações
+
+- [ ] Construir menu de opções na interface
+  - [ ] Listar profiles
+  - [ ] Criar aula
