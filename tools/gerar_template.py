@@ -8,6 +8,8 @@ Uso:
     cat componente.html | python gerar_template.py - --preview
 """
 
+
+
 import argparse
 import sys
 from pathlib import Path

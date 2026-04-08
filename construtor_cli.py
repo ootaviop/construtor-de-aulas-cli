@@ -428,9 +428,9 @@ def build_html_page(
     {css_tags}
 </head>
 <body>
-    <main class="conteudo-aula {profile.get("encapsulation-class", '')}">
+    <div class="conteudo-aula {profile.get("encapsulation-class", '')}">
         {conteudo}
-    </main>
+    </div>
     {js_tags}
 </body>
 </html>
