@@ -25,12 +25,11 @@ from fastapi.staticfiles import StaticFiles
 
 from construtor_cli import list_profiles, load_profile, process_document
 
-TEMPLATES_DIR = BASE_DIR / "templates"
-
 app = FastAPI(title="Construtor de Aulas", version="1.0.0")
 
 BASE_DIR = Path(__file__).parent
 WEB_DIR = BASE_DIR / "web"
+TEMPLATES_DIR = BASE_DIR / "templates"
 
 app.mount("/web", StaticFiles(directory=str(WEB_DIR)), name="web")
 
