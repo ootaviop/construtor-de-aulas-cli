@@ -11,12 +11,14 @@ Uso:
 
 import argparse
 import json
+import logging
 import os
 import re
 import sys
 import uuid
 from pathlib import Path
-from typing import Any
+
+logger = logging.getLogger("construtor")
 
 import mammoth
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound
@@ -196,15 +198,15 @@ RETORNE APENAS JSON VÁLIDO (sem markdown, sem explicações):
 '''
 
 
-def extract_with_claude(html: str, api_key: str | None = None) -> dict:
+def extract_with_claude(html: str, api_key: str | None = None, verbose: bool = False) -> dict:  # noqa: ARG001
     """Usa Claude API para extrair dados estruturados do HTML."""
     if not ANTHROPIC_AVAILABLE:
         raise ImportError("Módulo 'anthropic' não instalado. Use: pip install anthropic")
-    
+
     client = anthropic.Anthropic(api_key=api_key)
-    
+
     prompt = EXTRACTION_PROMPT.format(html_content=html)
-    
+
     message = client.messages.create(
         model="claude-sonnet-4-20250514",
         max_tokens=8192,
@@ -212,9 +214,11 @@ def extract_with_claude(html: str, api_key: str | None = None) -> dict:
             {"role": "user", "content": prompt}
         ]
     )
-    
+
     response_text = message.content[0].text
-    
+
+    logger.info("── RESPOSTA BRUTA DO CLAUDE ──\n%s\n── FIM ──", response_text)
+
     # Limpa possíveis wrappers de markdown
     response_text = response_text.strip()
     if response_text.startswith("```json"):
@@ -223,7 +227,7 @@ def extract_with_claude(html: str, api_key: str | None = None) -> dict:
         response_text = response_text[3:]
     if response_text.endswith("```"):
         response_text = response_text[:-3]
-    
+
     try:
         return json.loads(response_text.strip())
     except json.JSONDecodeError as e:
@@ -422,7 +426,7 @@ def build_html_page(
     {css_tags}
 </head>
 <body>
-    <main class="conteudo-aula">
+    <main class="conteudo-aula {profile.get("encapsulation-class", '')}">
         {conteudo}
     </main>
     {js_tags}
@@ -466,7 +470,7 @@ def process_document(
     else:
         if verbose:
             print("🤖 Extraindo dados via Claude API...")
-        dados = extract_with_claude(html_raw, api_key)
+        dados = extract_with_claude(html_raw, api_key, verbose=verbose)
     
     n_componentes = sum(1 for i in dados.get("itens", []) if i["tipo"] != "texto")
     if verbose:
@@ -478,6 +482,7 @@ def process_document(
 
     env = create_jinja_env()
     partes_html: list[str] = []
+    print("   Componentes:" if verbose else "")
 
     for item in dados.get("itens", []):
         if item["tipo"] == "texto":

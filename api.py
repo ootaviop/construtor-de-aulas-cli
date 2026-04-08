@@ -4,6 +4,7 @@ FastAPI web server para o Construtor de Aulas CAEd.
 Expõe o pipeline CLI como endpoints HTTP e serve a interface web.
 """
 
+import logging
 import os
 import tempfile
 from pathlib import Path
@@ -12,6 +13,13 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 
 load_dotenv()
+
+# Configura logging — use LOG_LEVEL=DEBUG no .env para ver a resposta bruta do Claude
+_log_level = os.environ.get("LOG_LEVEL", "INFO").upper()
+logging.basicConfig(
+    level=getattr(logging, _log_level, logging.INFO),
+    format="%(levelname)s  %(name)s  %(message)s",
+)
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
