@@ -112,7 +112,7 @@ def extract_html_from_docx(docx_path: str) -> str:
 # PROMPT PARA CLAUDE API
 # =============================================================================
 
-EXTRACTION_PROMPT = '''Analise o HTML de um documento educacional e extraia dados estruturados dos componentes.
+EXTRACTION_PROMPT = '''Analise o HTML de um documento educacional e extraia seus elementos na ORDEM EXATA em que aparecem no documento.
 
 COMPONENTES SUPORTADOS:
 - citacao: bloco de citação
@@ -122,10 +122,11 @@ COMPONENTES SUPORTADOS:
 - flipcards: cards que viram (contém <flipcard> com <flipcardfront> e <flipcardback>)
 
 REGRAS DE EXTRAÇÃO:
-1. Preserve TODO o HTML interno dos componentes (tags, classes, atributos)
-2. Gere IDs únicos se não existirem (formato: "comp-xxxx")
+1. Preserve TODO o HTML interno dos componentes e dos blocos de texto (tags, classes, atributos)
+2. Gere IDs únicos para componentes (formato: "tipo-xxxx")
 3. Para componentes com subcomponentes, extraia a hierarquia completa
-4. Texto fora de componentes vai em "html_solto"
+4. Blocos de texto entre componentes devem ser incluídos na lista como itens do tipo "texto"
+5. A lista "itens" deve refletir a sequência real do documento — não agrupe texto separado
 
 DOCUMENTO HTML:
 ```
@@ -134,13 +135,21 @@ DOCUMENTO HTML:
 
 RETORNE APENAS JSON VÁLIDO (sem markdown, sem explicações):
 {{
-  "componentes": [
+  "itens": [
+    {{
+      "tipo": "texto",
+      "html": "<p>Parágrafo antes do primeiro componente...</p>"
+    }},
     {{
       "tipo": "citacao",
       "id": "citacao-001",
       "dados": {{
         "conteudo": "<p>Texto da citação...</p>"
       }}
+    }},
+    {{
+      "tipo": "texto",
+      "html": "<p>Parágrafo entre componentes...</p>"
     }},
     {{
       "tipo": "carrossel",
@@ -151,6 +160,10 @@ RETORNE APENAS JSON VÁLIDO (sem markdown, sem explicações):
           {{"conteudo": "<p>Slide 2...</p>"}}
         ]
       }}
+    }},
+    {{
+      "tipo": "texto",
+      "html": "<p>Parágrafo após o último componente...</p>"
     }},
     {{
       "tipo": "sanfona",
@@ -178,9 +191,7 @@ RETORNE APENAS JSON VÁLIDO (sem markdown, sem explicações):
         ]
       }}
     }}
-  ],
-  "html_solto": "<p>Texto fora de componentes...</p>",
-  "ordem": ["html_solto", "citacao-001", "carrossel-001"]
+  ]
 }}
 '''
 
@@ -220,43 +231,52 @@ def extract_with_claude(html: str, api_key: str | None = None) -> dict:
 
 
 def extract_mock(html: str) -> dict:
-    """Extração mock para testes sem API."""
-    # Parsing simplificado para desenvolvimento
-    componentes = []
-    
-    # Detecta componentes por regex simples
+    """Extração mock para testes sem API.
+
+    Encontra todos os componentes com suas posições no HTML, ordena por
+    posição de início e intercala os segmentos de texto entre eles —
+    preservando a ordem exata do documento.
+    """
     patterns = {
-        "citacao": r'<citacao[^>]*>(.*?)</citacao>',
-        "atencao": r'<atencao[^>]*>(.*?)</atencao>',
+        "citacao":  r'<citacao[^>]*>(.*?)</citacao>',
+        "atencao":  r'<atencao[^>]*>(.*?)</atencao>',
         "carrossel": r'<carrossel[^>]*>(.*?)</carrossel>',
-        "sanfona": r'<sanfona[^>]*>(.*?)</sanfona>',
+        "sanfona":  r'<sanfona[^>]*>(.*?)</sanfona>',
         "flipcards": r'<flipcards[^>]*>(.*?)</flipcards>',
     }
-    
+
+    # Coleta todos os matches com posição no documento
+    all_matches: list[tuple[int, int, str, str]] = []
     for tipo, pattern in patterns.items():
-        for i, match in enumerate(re.finditer(pattern, html, re.DOTALL | re.IGNORECASE)):
-            comp_id = f"{tipo}-{uuid.uuid4().hex[:6]}"
-            conteudo = match.group(1)
-            
-            dados = parse_component_content(tipo, conteudo)
-            
-            componentes.append({
-                "tipo": tipo,
-                "id": comp_id,
-                "dados": dados
-            })
-    
-    # Remove componentes do HTML para obter html_solto
-    html_solto = html
-    for pattern in patterns.values():
-        html_solto = re.sub(pattern, '', html_solto, flags=re.DOTALL | re.IGNORECASE)
-    html_solto = html_solto.strip()
-    
-    return {
-        "componentes": componentes,
-        "html_solto": html_solto,
-        "ordem": [c["id"] for c in componentes]
-    }
+        for m in re.finditer(pattern, html, re.DOTALL | re.IGNORECASE):
+            all_matches.append((m.start(), m.end(), tipo, m.group(1)))
+
+    # Ordena por posição de início — garante ordem do documento
+    all_matches.sort(key=lambda x: x[0])
+
+    itens: list[dict] = []
+    cursor = 0
+
+    for start, end, tipo, conteudo in all_matches:
+        # Texto antes deste componente
+        segmento = html[cursor:start].strip()
+        if segmento:
+            itens.append({"tipo": "texto", "html": segmento})
+
+        dados = parse_component_content(tipo, conteudo)
+        itens.append({
+            "tipo": tipo,
+            "id": f"{tipo}-{uuid.uuid4().hex[:6]}",
+            "dados": dados,
+        })
+        cursor = end
+
+    # Texto após o último componente
+    segmento = html[cursor:].strip()
+    if segmento:
+        itens.append({"tipo": "texto", "html": segmento})
+
+    return {"itens": itens}
 
 
 def parse_component_content(tipo: str, conteudo: str) -> dict:
@@ -374,22 +394,24 @@ def render_component(
 
 
 def build_html_page(
-    componentes_html: list[str],
-    html_solto: str,
+    partes: list[str],
     profile: dict,
     titulo: str = "Aula"
 ) -> str:
-    """Monta a página HTML final com assets."""
-    
+    """Monta a página HTML final com assets.
+
+    `partes` é uma lista de strings HTML já na ordem correta do documento
+    (blocos de texto e componentes intercalados).
+    """
     # Lê bundle de assets do profile
     css = profile.get("css", "")
     js = profile.get("js", "")
 
     css_tags = f'<link rel="stylesheet" href="{css}">' if css else ""
     js_tags = f'<script src="{js}"></script>' if js else ""
-    
-    # Monta conteúdo
-    conteudo = html_solto + "\n\n" + "\n\n".join(componentes_html)
+
+    # Monta conteúdo na ordem recebida
+    conteudo = "\n\n".join(partes)
     
     return f'''<!DOCTYPE html>
 <html lang="pt-BR">
@@ -446,43 +468,43 @@ def process_document(
             print("🤖 Extraindo dados via Claude API...")
         dados = extract_with_claude(html_raw, api_key)
     
+    n_componentes = sum(1 for i in dados.get("itens", []) if i["tipo"] != "texto")
     if verbose:
-        print(f"   → {len(dados.get('componentes', []))} componentes encontrados")
-    
-    # 4. Renderiza componentes
+        print(f"   → {n_componentes} componentes encontrados")
+
+    # 4. Renderiza itens na ordem do documento
     if verbose:
         print("🎨 Renderizando templates...")
-    
+
     env = create_jinja_env()
-    componentes_html = []
-    
-    for comp in dados.get("componentes", []):
-        tipo = comp["tipo"]
-        comp_id = comp["id"]
-        comp_dados = comp["dados"]
-        
-        # Obtém versão do profile
+    partes_html: list[str] = []
+
+    for item in dados.get("itens", []):
+        if item["tipo"] == "texto":
+            partes_html.append(item["html"])
+            continue
+
+        tipo = item["tipo"]
+        comp_id = item["id"]
+        comp_dados = {**item["dados"], "id": comp_id}
+
         comp_config = profile.get("componentes", {}).get(tipo, {})
         model = comp_config.get("model", "m1")
         version = comp_config.get("version", "v1")
-        
-        # Adiciona ID aos dados
-        comp_dados["id"] = comp_id
-        
+
         try:
             html = render_component(env, tipo, model, version, comp_dados, fallback=True, verbose=verbose)
-            componentes_html.append(html)
+            partes_html.append(html)
             if verbose:
                 print(f"   ✓ {tipo} ({model}{version})")
         except Exception as e:
             print(f"   ✗ Erro em {tipo}: {e}", file=sys.stderr)
             raise
-    
+
     # 5. Monta página final
     titulo = Path(docx_path).stem
     html_final = build_html_page(
-        componentes_html,
-        dados.get("html_solto", ""),
+        partes_html,
         profile,
         titulo
     )

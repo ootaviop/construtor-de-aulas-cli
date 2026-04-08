@@ -32,44 +32,47 @@ def main():
     # 2. Extrai dados com parser mock
     print("\n🔧 Extraindo dados (modo mock)...")
     dados = extract_mock(html_raw)
-    
-    print(f"   Componentes encontrados: {len(dados['componentes'])}")
-    for comp in dados['componentes']:
-        print(f"   • {comp['tipo']}: {comp['id']}")
-    
+
+    itens = dados.get('itens', [])
+    componentes = [i for i in itens if i['tipo'] != 'texto']
+    print(f"   Componentes encontrados: {len(componentes)}")
+    for item in componentes:
+        print(f"   • {item['tipo']}: {item['id']}")
+
     # 3. Carrega profile
     print("\n📋 Carregando profile: default")
     profile = load_profile("default")
-    
-    # 4. Renderiza componentes
+
+    # 4. Renderiza itens na ordem do documento
     print("\n🎨 Renderizando componentes...")
     env = create_jinja_env()
-    componentes_html = []
-    
-    for comp in dados['componentes']:
-        tipo = comp['tipo']
-        comp_id = comp['id']
-        comp_dados = comp['dados']
-        
+    partes_html = []
+
+    for item in itens:
+        if item['tipo'] == 'texto':
+            partes_html.append(item['html'])
+            continue
+
+        tipo = item['tipo']
+        comp_id = item['id']
+        comp_dados = {**item['dados'], 'id': comp_id}
+
         comp_config = profile.get('componentes', {}).get(tipo, {})
         model = comp_config.get('model', 'm1')
         version = comp_config.get('version', 'v1')
-        
-        comp_dados['id'] = comp_id
-        
+
         try:
             html = render_component(env, tipo, model, version, comp_dados)
-            componentes_html.append(html)
+            partes_html.append(html)
             print(f"   ✓ {tipo} ({model}{version}) - {len(html)} chars")
         except Exception as e:
             print(f"   ✗ {tipo}: {e}")
             return 1
-    
+
     # 5. Monta página final
     print("\n📦 Montando página final...")
     html_final = build_html_page(
-        componentes_html,
-        dados.get('html_solto', ''),
+        partes_html,
         profile,
         "Aula de Teste"
     )
