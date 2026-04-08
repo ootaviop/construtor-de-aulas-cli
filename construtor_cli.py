@@ -203,6 +203,8 @@ def extract_with_claude(html: str, api_key: str | None = None, verbose: bool = F
     if not ANTHROPIC_AVAILABLE:
         raise ImportError("Módulo 'anthropic' não instalado. Use: pip install anthropic")
 
+    logger.info("── HTML ──\n%s\n── FIM ──", html)
+    
     client = anthropic.Anthropic(api_key=api_key)
 
     prompt = EXTRACTION_PROMPT.format(html_content=html)
