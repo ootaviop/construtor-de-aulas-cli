@@ -26,6 +26,28 @@ Para parar: `Ctrl+C` ou `docker compose down`.
 
 ---
 
+## Solução de problemas
+
+**`permission denied while trying to connect to the Docker daemon`**
+O usuário não está no grupo `docker`. Execute:
+```bash
+sudo usermod -aG docker $USER
+newgrp docker
+```
+Depois rode `bash start.sh` novamente.
+
+---
+
+**`unable to get image` / `pull access denied`**
+A imagem no Docker Hub está privada. Acesse **hub.docker.com → repositório → Settings → Make Public**.
+
+---
+
+**`404: Not Found` ao baixar o script**
+O repositório no GitHub está privado. Acesse **github.com → repositório → Settings → Danger Zone → Make public**.
+
+---
+
 ## Uso com Docker (desenvolvimento)
 
 ### Pré-requisitos
