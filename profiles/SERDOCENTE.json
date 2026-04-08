@@ -1,8 +1,9 @@
 {
   "nome": "SERDOCENTE",
   "descricao": "SERDOCENTE - versões base para todos componentes",
-  "css": "/projetos/cursos/SERDOCENTE/2026-1/bundle.css",
-  "js": "/projetos/cursos/SERDOCENTE/40H/2026-1/bundle.js",
+  "css": "https://recursos-moodle.caeddigital.net/projetos/cursos/SER-DOCENTE/2025-1/assets/css/styles-builded.css",
+  "js": "https://recursos-moodle.caeddigital.net/projetos/cursos/SER-DOCENTE/2025-1/assets/js/main.js",
+  "encapsulation-class": "ser-docente-2025-1",
   "componentes": {
     "citacao": {
       "model": "m1",
