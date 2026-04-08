@@ -25,6 +25,8 @@ from fastapi.staticfiles import StaticFiles
 
 from construtor_cli import list_profiles, load_profile, process_document
 
+TEMPLATES_DIR = BASE_DIR / "templates"
+
 app = FastAPI(title="Construtor de Aulas", version="1.0.0")
 
 BASE_DIR = Path(__file__).parent
@@ -46,7 +48,7 @@ async def health():
 
 @app.get("/api/profiles")
 async def get_profiles():
-    """Retorna todos os profiles disponíveis com nome, label e descrição."""
+    """Retorna todos os profiles disponíveis com dados completos."""
     profiles = []
     for name in list_profiles():
         try:
@@ -55,10 +57,26 @@ async def get_profiles():
                 "name": name,
                 "label": data.get("nome", name),
                 "descricao": data.get("descricao", ""),
+                "css": data.get("css", ""),
+                "js": data.get("js", ""),
+                "componentes": data.get("componentes", {}),
             })
         except Exception:
             pass
     return JSONResponse(content=profiles)
+
+
+@app.get("/api/templates")
+async def get_templates():
+    """Lista templates disponíveis agrupados por tipo de componente."""
+    result = {}
+    if TEMPLATES_DIR.exists():
+        for tipo_dir in sorted(TEMPLATES_DIR.iterdir()):
+            if tipo_dir.is_dir():
+                versions = sorted([f.stem for f in tipo_dir.glob("*.html")])
+                if versions:
+                    result[tipo_dir.name] = versions
+    return JSONResponse(content=result)
 
 
 @app.post("/api/convert")
