@@ -16,3 +16,6 @@ env/
 
 # Editor
 .DS_Store
+
+# Todos
+todo.md
