@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Construtor de Aulas</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* Garante que [hidden] nunca seja sobrescrito por regras de display */
+    [hidden] { display: none !important; }
+
+    :root {
+      --brand:       #2563eb;
+      --brand-dark:  #1d4ed8;
+      --brand-light: #eff6ff;
+      --success:     #16a34a;
+      --success-bg:  #f0fdf4;
+      --danger:      #dc2626;
+      --danger-bg:   #fef2f2;
+      --warn:        #d97706;
+      --warn-bg:     #fffbeb;
+      --gray-50:     #f8fafc;
+      --gray-100:    #f1f5f9;
+      --gray-200:    #e2e8f0;
+      --gray-400:    #94a3b8;
+      --gray-500:    #64748b;
+      --gray-700:    #334155;
+      --gray-900:    #0f172a;
+      --radius:      10px;
+      --shadow-sm:   0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
+      --shadow-md:   0 4px 12px rgba(0,0,0,.10), 0 2px 4px rgba(0,0,0,.06);
+      --transition:  0.18s ease;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+      background: var(--gray-100);
+      color: var(--gray-900);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    /* ── Header ─────────────────────────────────────────────── */
+    header {
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
+      color: #fff;
+      padding: 1.75rem 2rem;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .header-inner {
+      max-width: 860px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .header-icon {
+      width: 42px; height: 42px;
+      background: rgba(37,99,235,.6);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .header-icon svg { width: 22px; height: 22px; }
+    .header-text h1 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      letter-spacing: -.01em;
+    }
+    .header-text p {
+      font-size: 0.82rem;
+      color: rgba(255,255,255,.5);
+      margin-top: 0.15rem;
+    }
+
+    /* ── Layout ─────────────────────────────────────────────── */
+    main {
+      max-width: 860px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    /* ── Card ───────────────────────────────────────────────── */
+    .card {
+      background: #fff;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--gray-200);
+      overflow: hidden;
+    }
+    .card-header {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--gray-200);
+      background: var(--gray-50);
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--gray-700);
+    }
+    .card-header svg { color: var(--brand); flex-shrink: 0; }
+    .card-body { padding: 1.5rem; }
+
+    /* ── Drop zone ──────────────────────────────────────────── */
+    #drop-zone {
+      border: 2px dashed var(--gray-200);
+      border-radius: 8px;
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color var(--transition), background var(--transition);
+      position: relative;
+      background: var(--gray-50);
+    }
+    #drop-zone:hover,
+    #drop-zone.drag-over {
+      border-color: var(--brand);
+      background: var(--brand-light);
+    }
+    #drop-zone input[type="file"] {
+      position: absolute; inset: 0;
+      opacity: 0; cursor: pointer;
+      width: 100%; height: 100%;
+    }
+    .drop-icon {
+      width: 48px; height: 48px;
+      margin: 0 auto 0.75rem;
+      background: var(--gray-200);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background var(--transition);
+    }
+    #drop-zone:hover .drop-icon,
+    #drop-zone.drag-over .drop-icon { background: #bfdbfe; }
+    .drop-icon svg { width: 22px; height: 22px; color: var(--gray-500); transition: color var(--transition); }
+    #drop-zone:hover .drop-icon svg,
+    #drop-zone.drag-over .drop-icon svg { color: var(--brand); }
+    .drop-title {
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: var(--gray-700);
+    }
+    .drop-subtitle {
+      font-size: 0.82rem;
+      color: var(--gray-400);
+      margin-top: 0.3rem;
+    }
+
+    /* File selected state */
+    #file-info {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      background: var(--success-bg);
+      border: 1px solid #bbf7d0;
+      border-radius: 8px;
+      margin-top: 0.75rem;
+    }
+    #file-info[hidden] { display: none; }
+    .file-info-icon {
+      width: 36px; height: 36px;
+      background: #dcfce7;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .file-info-icon svg { width: 18px; height: 18px; color: var(--success); }
+    .file-info-name {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--gray-700);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .file-info-size {
+      font-size: 0.775rem;
+      color: var(--gray-500);
+      margin-top: 0.1rem;
+    }
+    .file-info-clear {
+      margin-left: auto;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--gray-400);
+      padding: 0.2rem;
+      border-radius: 4px;
+      display: flex;
+      transition: color var(--transition);
+      flex-shrink: 0;
+    }
+    .file-info-clear:hover { color: var(--danger); }
+    .file-info-clear svg { width: 16px; height: 16px; }
+
+    /* ── Form fields ────────────────────────────────────────── */
+    .field { margin-top: 1.25rem; }
+    .field label {
+      display: block;
+      font-weight: 600;
+      font-size: 0.82rem;
+      margin-bottom: 0.4rem;
+      color: var(--gray-700);
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .field select {
+      width: 100%;
+      padding: 0.6rem 0.85rem;
+      border: 1px solid var(--gray-200);
+      border-radius: 8px;
+      font-size: 0.9rem;
+      background: var(--gray-50);
+      color: var(--gray-900);
+      appearance: auto;
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+    .field select:focus {
+      outline: none;
+      border-color: var(--brand);
+      box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+    }
+
+    /* Profile description pill */
+    #profile-desc {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      margin-top: 0.5rem;
+      font-size: 0.78rem;
+      color: var(--gray-500);
+      min-height: 1.2rem;
+    }
+    #profile-desc:not(:empty)::before {
+      content: '';
+      display: inline-block;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--brand);
+      flex-shrink: 0;
+    }
+
+    /* ── Toggle switch (mock mode) ──────────────────────────── */
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.85rem 1rem;
+      background: var(--warn-bg);
+      border: 1px solid #fde68a;
+      border-radius: 8px;
+      margin-top: 1.25rem;
+      gap: 1rem;
+    }
+    .toggle-row.inactive {
+      background: var(--gray-50);
+      border-color: var(--gray-200);
+    }
+    .toggle-label {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--gray-700);
+    }
+    .toggle-label span {
+      display: block;
+      font-weight: 400;
+      font-size: 0.775rem;
+      color: var(--gray-500);
+      margin-top: 0.1rem;
+    }
+    .toggle {
+      position: relative;
+      width: 40px; height: 22px;
+      flex-shrink: 0;
+    }
+    .toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .toggle-track {
+      position: absolute; inset: 0;
+      background: var(--gray-200);
+      border-radius: 11px;
+      cursor: pointer;
+      transition: background var(--transition);
+    }
+    .toggle input:checked + .toggle-track { background: var(--warn); }
+    .toggle-track::after {
+      content: '';
+      position: absolute;
+      left: 3px; top: 3px;
+      width: 16px; height: 16px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform var(--transition);
+      box-shadow: 0 1px 3px rgba(0,0,0,.2);
+    }
+    .toggle input:checked + .toggle-track::after { transform: translateX(18px); }
+
+    /* ── Submit button ──────────────────────────────────────── */
+    .btn-primary {
+      width: 100%;
+      background: var(--brand);
+      color: #fff;
+      border: none;
+      padding: 0.75rem;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 1.5rem;
+      transition: background var(--transition), transform var(--transition), box-shadow var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      box-shadow: 0 1px 3px rgba(37,99,235,.3);
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: var(--brand-dark);
+      box-shadow: 0 4px 12px rgba(37,99,235,.35);
+      transform: translateY(-1px);
+    }
+    .btn-primary:active:not(:disabled) { transform: translateY(0); }
+    .btn-primary:disabled { background: var(--gray-400); cursor: not-allowed; box-shadow: none; transform: none; }
+    .btn-primary svg { width: 18px; height: 18px; }
+
+    /* ── Spinner / loading state ────────────────────────────── */
+    .spinner-body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      padding: 2.5rem;
+      text-align: center;
+    }
+    .spinner-wrap {
+      position: relative;
+      width: 56px; height: 56px;
+    }
+    .spinner-ring {
+      width: 56px; height: 56px;
+      border: 3px solid var(--gray-200);
+      border-top-color: var(--brand);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner-inner {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .spinner-inner svg { width: 20px; height: 20px; color: var(--brand); }
+    .spinner-title {
+      font-weight: 600;
+      color: var(--gray-700);
+      font-size: 0.95rem;
+    }
+    .spinner-sub {
+      font-size: 0.82rem;
+      color: var(--gray-400);
+    }
+
+    /* ── Error box ──────────────────────────────────────────── */
+    #error-box {
+      display: flex;
+      gap: 0.85rem;
+      align-items: flex-start;
+      background: var(--danger-bg);
+      border: 1px solid #fecaca;
+      border-left: 4px solid var(--danger);
+      padding: 1rem 1.25rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+    }
+    #error-box svg {
+      width: 18px; height: 18px;
+      color: var(--danger);
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    #error-box strong {
+      display: block;
+      font-weight: 600;
+      color: var(--danger);
+      margin-bottom: 0.2rem;
+    }
+    #error-message { color: var(--gray-700); }
+
+    /* ── Result section ─────────────────────────────────────── */
+    .result-toolbar {
+      padding: 0.85rem 1.25rem;
+      background: var(--gray-50);
+      border-bottom: 1px solid var(--gray-200);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    .result-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--success);
+      background: var(--success-bg);
+      border: 1px solid #bbf7d0;
+      padding: 0.3rem 0.75rem;
+      border-radius: 99px;
+    }
+    .result-badge svg { width: 13px; height: 13px; }
+    .toolbar-actions { display: flex; gap: 0.5rem; }
+    .btn-download {
+      background: var(--success);
+      color: #fff;
+      text-decoration: none;
+      padding: 0.45rem 1rem;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      transition: background var(--transition), transform var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .btn-download:hover {
+      background: #15803d;
+      transform: translateY(-1px);
+    }
+    .btn-download svg { width: 14px; height: 14px; }
+    .btn-new {
+      background: #fff;
+      color: var(--gray-700);
+      border: 1px solid var(--gray-200);
+      padding: 0.45rem 1rem;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background var(--transition), transform var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .btn-new:hover {
+      background: var(--gray-100);
+      transform: translateY(-1px);
+    }
+    .btn-new svg { width: 14px; height: 14px; }
+
+    #preview-frame {
+      width: 100%;
+      height: 640px;
+      border: none;
+      display: block;
+      background: var(--gray-50);
+    }
+
+    /* ── Animations ─────────────────────────────────────────── */
+    .fade-in {
+      animation: fadeIn 0.25s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Responsive ─────────────────────────────────────────── */
+    @media (max-width: 500px) {
+      header { padding: 1.25rem 1rem; }
+      .card-body { padding: 1.25rem 1rem; }
+      #preview-frame { height: 400px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="header-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="white">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
+      </svg>
+    </div>
+    <div class="header-text">
+      <h1>Construtor de Aulas CAEd</h1>
+      <p>Converta documentos .docx em páginas HTML com componentes interativos</p>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- Form card -->
+  <div class="card" id="form-section">
+    <div class="card-header">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none"
+           viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+      </svg>
+      Configurar conversão
+    </div>
+    <div class="card-body">
+      <form id="convert-form">
+
+        <!-- Drop zone -->
+        <div id="drop-zone" role="button" aria-label="Selecionar arquivo .docx">
+          <input type="file" id="file-input" accept=".docx" required aria-label="Arquivo .docx">
+          <div class="drop-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                 stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+            </svg>
+          </div>
+          <p class="drop-title">Arraste o arquivo aqui ou clique para selecionar</p>
+          <p class="drop-subtitle">Aceita arquivos <strong>.docx</strong></p>
+        </div>
+
+        <!-- File info (shown after selection) -->
+        <div id="file-info" hidden>
+          <div class="file-info-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                 stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+            </svg>
+          </div>
+          <div style="overflow: hidden; flex: 1;">
+            <div class="file-info-name" id="file-info-name"></div>
+            <div class="file-info-size" id="file-info-size"></div>
+          </div>
+          <button type="button" class="file-info-clear" id="clear-file" title="Remover arquivo">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                 stroke-width="2" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Profile -->
+        <div class="field">
+          <label for="profile-select">Profile</label>
+          <select id="profile-select"></select>
+          <small id="profile-desc"></small>
+        </div>
+
+        <!-- Mock toggle -->
+        <div class="toggle-row inactive" id="toggle-row">
+          <div class="toggle-label">
+            Modo teste (sem API)
+            <span>Usa extração por regex sem consumir créditos Claude</span>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="mock-checkbox">
+            <div class="toggle-track"></div>
+          </label>
+        </div>
+
+        <!-- Submit -->
+        <button type="submit" class="btn-primary" id="submit-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+               stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" />
+          </svg>
+          Converter documento
+        </button>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- Loading state -->
+  <div class="card" id="spinner" hidden>
+    <div class="spinner-body">
+      <div class="spinner-wrap">
+        <div class="spinner-ring"></div>
+        <div class="spinner-inner">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+               stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
+          </svg>
+        </div>
+      </div>
+      <div>
+        <p class="spinner-title">Convertendo documento…</p>
+        <p class="spinner-sub">Isso pode levar alguns segundos</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error -->
+  <div id="error-box" hidden role="alert">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+         stroke-width="1.5" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round"
+        d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+    </svg>
+    <div>
+      <strong>Erro ao converter</strong>
+      <span id="error-message"></span>
+    </div>
+  </div>
+
+  <!-- Result -->
+  <div class="card fade-in" id="result-section" hidden>
+    <div class="result-toolbar">
+      <div class="result-badge">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+             stroke-width="2.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+        </svg>
+        Conversão concluída
+      </div>
+      <div class="toolbar-actions">
+        <button class="btn-new" id="btn-new">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+               stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M12 4.5v15m7.5-7.5h-15" />
+          </svg>
+          Nova conversão
+        </button>
+        <a id="download-link" class="btn-download" download>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+               stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+          </svg>
+          Baixar HTML
+        </a>
+      </div>
+    </div>
+    <iframe id="preview-frame" title="Preview da aula"></iframe>
+  </div>
+
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  const form        = document.getElementById('convert-form');
+  const fileInput   = document.getElementById('file-input');
+  const dropZone    = document.getElementById('drop-zone');
+  const fileInfo    = document.getElementById('file-info');
+  const fileInfoName= document.getElementById('file-info-name');
+  const fileInfoSize= document.getElementById('file-info-size');
+  const clearFile   = document.getElementById('clear-file');
+  const profileSel  = document.getElementById('profile-select');
+  const profileDesc = document.getElementById('profile-desc');
+  const mockCheck   = document.getElementById('mock-checkbox');
+  const toggleRow   = document.getElementById('toggle-row');
+  const submitBtn   = document.getElementById('submit-btn');
+  const spinner     = document.getElementById('spinner');
+  const errorBox    = document.getElementById('error-box');
+  const errorMsg    = document.getElementById('error-message');
+  const resultSec   = document.getElementById('result-section');
+  const dlLink      = document.getElementById('download-link');
+  const btnNew      = document.getElementById('btn-new');
+  const iframe      = document.getElementById('preview-frame');
+
+  // ── Profiles ─────────────────────────────────────────────
+  async function loadProfiles() {
+    try {
+      const res = await fetch('/api/profiles');
+      if (!res.ok) throw new Error('Falha ao carregar profiles.');
+      const profiles = await res.json();
+
+      if (!profiles.length) {
+        showError('Nenhum profile encontrado no servidor.');
+        return;
+      }
+
+      profiles.forEach(function (p) {
+        const opt = document.createElement('option');
+        opt.value = p.name;
+        opt.textContent = p.label || p.name;
+        opt.dataset.descricao = p.descricao || '';
+        profileSel.appendChild(opt);
+      });
+
+      updateProfileDesc();
+    } catch (err) {
+      showError('Não foi possível carregar os profiles: ' + err.message);
+    }
+  }
+
+  function updateProfileDesc() {
+    const sel = profileSel.selectedOptions[0];
+    profileDesc.textContent = sel ? (sel.dataset.descricao || '') : '';
+  }
+
+  profileSel.addEventListener('change', updateProfileDesc);
+
+  // ── Mock toggle style ─────────────────────────────────────
+  mockCheck.addEventListener('change', function () {
+    toggleRow.classList.toggle('inactive', !mockCheck.checked);
+  });
+
+  // ── Drag & drop ───────────────────────────────────────────
+  dropZone.addEventListener('dragover', function (e) {
+    e.preventDefault();
+    dropZone.classList.add('drag-over');
+  });
+  dropZone.addEventListener('dragleave', function () {
+    dropZone.classList.remove('drag-over');
+  });
+  dropZone.addEventListener('drop', function (e) {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    const files = e.dataTransfer.files;
+    if (files.length) setFile(files[0]);
+  });
+
+  fileInput.addEventListener('change', function () {
+    if (fileInput.files.length) setFile(fileInput.files[0]);
+  });
+
+  function formatBytes(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / 1048576).toFixed(1) + ' MB';
+  }
+
+  function setFile(file) {
+    fileInfoName.textContent = file.name;
+    fileInfoSize.textContent = formatBytes(file.size);
+    fileInfo.hidden = false;
+    dropZone.style.display = 'none';
+    clearError();
+  }
+
+  clearFile.addEventListener('click', function () {
+    fileInput.value = '';
+    fileInfo.hidden = true;
+    dropZone.style.display = '';
+  });
+
+  // ── UI helpers ────────────────────────────────────────────
+  function showError(msg) {
+    errorMsg.textContent = msg;
+    errorBox.hidden = false;
+  }
+  function clearError() {
+    errorBox.hidden = true;
+    errorMsg.textContent = '';
+  }
+  function setLoading(loading) {
+    spinner.hidden = !loading;
+    submitBtn.disabled = loading;
+    submitBtn.innerHTML = loading
+      ? '<div class="spinner-ring" style="width:18px;height:18px;border-width:2px;margin:0"></div> Convertendo…'
+      : '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:18px;height:18px"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" /></svg> Converter documento';
+  }
+
+  // ── Blob cleanup ──────────────────────────────────────────
+  var previousBlobUrl = null;
+  function cleanupPreviousBlob() {
+    if (previousBlobUrl) { URL.revokeObjectURL(previousBlobUrl); previousBlobUrl = null; }
+  }
+
+  // ── "Nova conversão" button ───────────────────────────────
+  btnNew.addEventListener('click', function () {
+    resultSec.hidden = true;
+    document.getElementById('form-section').hidden = false;
+    fileInput.value = '';
+    fileInfo.hidden = true;
+    dropZone.style.display = '';
+    cleanupPreviousBlob();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  // ── Submit ────────────────────────────────────────────────
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    clearError();
+    resultSec.hidden = true;
+    cleanupPreviousBlob();
+
+    const file = fileInput.files[0];
+    if (!file) { showError('Selecione um arquivo .docx.'); return; }
+
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('profile', profileSel.value);
+    fd.append('mock', mockCheck.checked ? 'true' : 'false');
+
+    setLoading(true);
+    document.getElementById('form-section').hidden = true;
+
+    try {
+      const res = await fetch('/api/convert', { method: 'POST', body: fd });
+
+      if (!res.ok) {
+        let detail = 'Erro ' + res.status;
+        try { const b = await res.json(); detail = b.detail || detail; } catch (_) {}
+        throw new Error(detail);
+      }
+
+      const blob    = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      previousBlobUrl = blobUrl;
+
+      const stem      = file.name.replace(/\.docx$/i, '');
+      dlLink.href     = blobUrl;
+      dlLink.download = stem + '.html';
+      iframe.src      = blobUrl;
+
+      resultSec.hidden = false;
+      resultSec.scrollIntoView({ behavior: 'smooth' });
+
+    } catch (err) {
+      document.getElementById('form-section').hidden = false;
+      showError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  });
+
+  // ── Init ──────────────────────────────────────────────────
+  loadProfiles();
+
+})();
+</script>
+
+</body>
+</html>
