@@ -30,10 +30,12 @@ Para parar: `Ctrl+C` ou `docker compose down`.
 
 **`permission denied while trying to connect to the Docker daemon`**
 O usuário não está no grupo `docker`. Execute:
+
 ```bash
 sudo usermod -aG docker $USER
 newgrp docker
 ```
+
 Depois rode `bash start.sh` novamente.
 
 ---
@@ -174,3 +176,5 @@ uvicorn api:app --reload --port 8000
 - [ ] Construir menu de opções na interface
   - [ ] Listar profiles
   - [ ] Criar aula
+
+- [ ] Rodar LLM localmente (sem API Claude)
