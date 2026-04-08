@@ -8,25 +8,28 @@ Pipeline de conversão de arquivos `.docx` com tags customizadas em páginas HTM
 
 1. [Visão Geral](#1-visão-geral)
 2. [Instalação e Configuração](#2-instalação-e-configuração)
-3. [Uso da CLI](#3-uso-da-cli)
-4. [Pipeline Interno](#4-pipeline-interno)
-5. [Tags de Componentes (no .docx)](#5-tags-de-componentes-no-docx)
-6. [Sistema de Profiles](#6-sistema-de-profiles)
-7. [Sistema de Templates](#7-sistema-de-templates)
-8. [Schemas de Dados por Componente](#8-schemas-de-dados-por-componente)
-9. [Extração via Claude API vs. Mock](#9-extração-via-claude-api-vs-mock)
-10. [Testes](#10-testes)
-11. [Ferramenta gerar_template.py](#11-ferramenta-gerar_templatepy)
-12. [Estrutura de Diretórios](#12-estrutura-de-diretórios)
-13. [Como Adicionar um Novo Componente](#13-como-adicionar-um-novo-componente)
-14. [Como Adicionar um Novo Profile](#14-como-adicionar-um-novo-profile)
-15. [Como Adicionar uma Nova Versão de Template](#15-como-adicionar-uma-nova-versão-de-template)
+3. [Interface Web e API](#3-interface-web-e-api)
+4. [Uso da CLI](#4-uso-da-cli)
+5. [Pipeline Interno](#5-pipeline-interno)
+6. [Tags de Componentes (no .docx)](#6-tags-de-componentes-no-docx)
+7. [Sistema de Profiles](#7-sistema-de-profiles)
+8. [Sistema de Templates](#8-sistema-de-templates)
+9. [Schemas de Dados por Componente](#9-schemas-de-dados-por-componente)
+10. [Extração via Claude API vs. Mock](#10-extração-via-claude-api-vs-mock)
+11. [Testes](#11-testes)
+12. [Ferramenta gerar_template.py](#12-ferramenta-gerar_templatepy)
+13. [Estrutura de Diretórios](#13-estrutura-de-diretórios)
+14. [Como Adicionar um Novo Componente](#14-como-adicionar-um-novo-componente)
+15. [Como Adicionar um Novo Profile](#15-como-adicionar-um-novo-profile)
+16. [Como Adicionar uma Nova Versão de Template](#16-como-adicionar-uma-nova-versão-de-template)
 
 ---
 
 ## 1. Visão Geral
 
-O Construtor de Aulas é uma CLI Python que transforma documentos Word (`.docx`) em páginas HTML educacionais interativas. O autor do `.docx` usa tags XML-like customizadas para marcar componentes (carrossel, sanfona, flipcards etc.) e o construtor converte isso em HTML renderizado via templates Jinja2.
+O Construtor de Aulas é uma ferramenta Python que transforma documentos Word (`.docx`) em páginas HTML educacionais interativas. Pode ser usada via **interface web** (modo recomendado, serve a partir de um container Docker) ou diretamente pela **CLI** (modo desenvolvimento).
+
+O autor do `.docx` usa tags XML-like customizadas para marcar componentes (carrossel, sanfona, flipcards etc.) e o construtor converte isso em HTML renderizado via templates Jinja2.
 
 **Fluxo resumido:**
 
@@ -38,6 +41,13 @@ aula.docx
   → HTML final (com CSS/JS do profile do curso)
 ```
 
+**Modos de uso:**
+
+| Modo | Ponto de entrada | Indicado para |
+|---|---|---|
+| Interface web | `docker compose up` → http://localhost:8000 | Uso geral, produção |
+| CLI direta | `python construtor_cli.py aula.docx` | Desenvolvimento, scripts, CI |
+
 **Dependências principais:**
 
 | Pacote | Versão mínima | Função |
@@ -45,10 +55,45 @@ aula.docx
 | `mammoth` | 1.6.0 | Extração de HTML do `.docx` |
 | `jinja2` | 3.1.0 | Renderização de templates |
 | `anthropic` | 0.39.0 | Claude API (opcional em modo mock) |
+| `fastapi` | — | Servidor web e endpoints REST |
+| `uvicorn` | — | Servidor ASGI para o FastAPI |
+| `python-dotenv` | — | Leitura do arquivo `.env` |
 
 ---
 
 ## 2. Instalação e Configuração
+
+### Opção A — Docker (recomendado)
+
+**Pré-requisito:** [Docker Desktop](https://www.docker.com/products/docker-desktop/) instalado.
+
+1. Crie um arquivo `.env` na raiz do projeto com sua chave de API:
+
+```
+ANTHROPIC_API_KEY=sk-ant-...
+```
+
+2. Construa a imagem:
+
+```bash
+docker compose build
+```
+
+3. Suba o servidor:
+
+```bash
+docker compose up
+```
+
+4. Acesse **http://localhost:8000** no navegador.
+
+Para parar: `Ctrl+C` ou `docker compose down`.
+
+> O `docker-compose.yml` mapeia a porta 8000 e injeta o `.env` automaticamente no container. O `Dockerfile` usa `python:3.11-slim` e inicia o servidor com `uvicorn api:app --host 0.0.0.0 --port 8000`.
+
+---
+
+### Opção B — Local sem Docker (desenvolvimento)
 
 ```bash
 pip install -r requirements.txt
@@ -62,11 +107,95 @@ export ANTHROPIC_API_KEY="sk-ant-..."
 
 A chave também pode ser passada diretamente via `--api-key` na chamada da CLI.
 
+Para subir o servidor web localmente:
+
+```bash
+uvicorn api:app --reload --port 8000
+```
+
 **Versão Python:** o projeto usa `.python-version` (pyenv). Recomendado Python 3.11+, pois o código usa anotações de tipo como `str | None` e `list[str]`.
 
 ---
 
-## 3. Uso da CLI
+## 3. Interface Web e API
+
+O servidor web é implementado em `api.py` usando **FastAPI** e exposto na porta 8000.
+
+### Interface web
+
+A rota raiz (`GET /`) serve `web/index.html` diretamente. A interface permite:
+
+- Upload de arquivo `.docx` (com drag & drop)
+- Seleção de profile (carregados dinamicamente da API)
+- Ativação do modo teste (sem chamada à Claude API)
+- Preview do HTML gerado em um `<iframe>`
+- Download do arquivo `.html` resultante
+
+Arquivos estáticos em `web/` são servidos sob o prefixo `/web` via `StaticFiles`.
+
+### Endpoints
+
+#### `GET /health`
+
+Verifica se o servidor está no ar.
+
+```json
+{ "status": "ok" }
+```
+
+#### `GET /api/profiles`
+
+Retorna a lista de todos os profiles disponíveis em `profiles/`.
+
+**Resposta:**
+
+```json
+[
+  { "name": "default",   "label": "Default",    "descricao": "..." },
+  { "name": "DP90h",     "label": "DP 90h",     "descricao": "..." },
+  { "name": "PROSA40h",  "label": "PROSA 40h",  "descricao": "..." }
+]
+```
+
+Profiles cujo JSON falhe ao carregar são silenciosamente omitidos da lista.
+
+#### `POST /api/convert`
+
+Executa a conversão de um `.docx` e retorna o HTML resultante.
+
+**Body (multipart/form-data):**
+
+| Campo | Tipo | Padrão | Descrição |
+|---|---|---|---|
+| `file` | `UploadFile` | — | Arquivo `.docx` a converter (obrigatório) |
+| `profile` | `string` | `"default"` | Nome do profile a usar |
+| `mock` | `string` | `"false"` | `"true"` para usar extração por regex sem API |
+
+**Resposta (sucesso — 200):**
+
+HTML completo com os headers:
+```
+Content-Type: text/html; charset=utf-8
+Content-Disposition: attachment; filename="<nome-do-arquivo>.html"
+```
+
+O header `Content-Disposition: attachment` permite que o frontend use o mesmo blob tanto no `<iframe>` (preview) quanto como link de download.
+
+**Erros:**
+
+| Código | Situação |
+|---|---|
+| 400 | Arquivo não é `.docx`, está vazio ou o profile não existe |
+| 422 | Erro de validação no conteúdo do documento |
+| 500 | Erro inesperado no pipeline |
+
+**Chave de API:**
+
+A chave Anthropic é lida de `os.environ["ANTHROPIC_API_KEY"]`, que no Docker é injetada pelo `docker-compose.yml` via `.env`. Em modo local, exportar a variável de ambiente ou usar um `.env` na raiz do projeto (carregado via `python-dotenv`).
+
+---
+
+## 4. Uso da CLI
 
 O ponto de entrada é `construtor_cli.py`.
 
@@ -113,7 +242,7 @@ python construtor_cli.py aula.docx --mock --dry-run
 
 ---
 
-## 4. Pipeline Interno
+## 5. Pipeline Interno
 
 A função principal é `process_document()` em `construtor_cli.py`. Ela orquestra as etapas na sequência:
 
@@ -184,7 +313,7 @@ Salva em `output_path` (ou no mesmo diretório do `.docx` com extensão `.html`)
 
 ---
 
-## 5. Tags de Componentes (no .docx)
+## 6. Tags de Componentes (no .docx)
 
 O autor usa tags XML-like diretamente no documento Word. Mammoth as passa adiante como texto no HTML gerado.
 
@@ -249,7 +378,7 @@ Tag opcional de fonte, colocada dentro de `<sanfona>` mas fora das seções:
 
 ---
 
-## 6. Sistema de Profiles
+## 7. Sistema de Profiles
 
 Profiles são arquivos JSON em `profiles/`. Cada curso/turma tem seu próprio profile.
 
@@ -297,7 +426,7 @@ Quando o template `<tipo>/<model><version>.html` não existe, o sistema usa `<ti
 
 ---
 
-## 7. Sistema de Templates
+## 8. Sistema de Templates
 
 Templates ficam em `templates/<tipo>/<model><version>.html` e são arquivos Jinja2.
 
@@ -347,7 +476,7 @@ Environment(
 
 ---
 
-## 8. Schemas de Dados por Componente
+## 9. Schemas de Dados por Componente
 
 Dados que o pipeline injeta em cada template. Todos recebem `id` automaticamente.
 
@@ -415,7 +544,7 @@ Dados que o pipeline injeta em cada template. Todos recebem `id` automaticamente
 
 ---
 
-## 9. Extração via Claude API vs. Mock
+## 10. Extração via Claude API vs. Mock
 
 ### Claude API (`extract_with_claude`)
 
@@ -440,7 +569,7 @@ Dados que o pipeline injeta em cada template. Todos recebem `id` automaticamente
 
 ---
 
-## 10. Testes
+## 11. Testes
 
 Todos os scripts de teste ficam em `tests/` e podem ser executados diretamente:
 
@@ -483,7 +612,7 @@ Compara a renderização do carrossel entre os profiles `default` (m1v1) e `DP90
 
 ---
 
-## 11. Ferramenta gerar_template.py
+## 12. Ferramenta gerar_template.py
 
 Utilitário em `tools/gerar_template.py` que usa a Claude API para converter um HTML de componente renderizado em um template Jinja2.
 
@@ -506,13 +635,20 @@ O script envia o HTML para `claude-sonnet-4-20250514` com instruções para:
 
 ---
 
-## 12. Estrutura de Diretórios
+## 13. Estrutura de Diretórios
 
 ```
 construtor/
 ├── construtor_cli.py          # Pipeline principal e CLI
+├── api.py                     # Servidor FastAPI (web + endpoints REST)
 ├── requirements.txt           # Dependências Python
 ├── .python-version            # Versão Python (pyenv)
+├── Dockerfile                 # Imagem Python 3.11-slim + uvicorn
+├── docker-compose.yml         # Sobe o serviço na porta 8000 com .env
+├── .env                       # Chave ANTHROPIC_API_KEY (não commitado)
+│
+├── web/
+│   └── index.html             # Interface web (upload, preview, download)
 │
 ├── profiles/                  # Configurações por curso
 │   ├── default.json
@@ -546,7 +682,7 @@ construtor/
 ├── tools/                     # Utilitários de desenvolvimento
 │   └── gerar_template.py
 │
-├── output/                    # Saídas geradas pelos testes
+├── output/                    # Saídas geradas pelos testes (não commitado)
 │   ├── citacao_exemplo.html
 │   ├── atencao_exemplo.html
 │   ├── carrossel_exemplo.html
@@ -560,7 +696,7 @@ construtor/
 
 ---
 
-## 13. Como Adicionar um Novo Componente
+## 14. Como Adicionar um Novo Componente
 
 **Exemplo:** adicionar o componente `tabs`.
 
@@ -628,7 +764,7 @@ python construtor_cli.py --validate --profile default
 
 ---
 
-## 14. Como Adicionar um Novo Profile
+## 15. Como Adicionar um Novo Profile
 
 1. Criar `profiles/<nome>.json` com a estrutura padrão:
 
@@ -658,7 +794,7 @@ Se algum template apontado não existir, o `--validate` reportará o fallback ou
 
 ---
 
-## 15. Como Adicionar uma Nova Versão de Template
+## 16. Como Adicionar uma Nova Versão de Template
 
 **Exemplo:** criar `carrossel/m1v3.html`.
 
