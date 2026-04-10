@@ -178,3 +178,10 @@ uvicorn api:app --reload --port 8000
   - [ ] Criar aula
 
 - [ ] Rodar LLM localmente (sem API Claude)
+
+- [ ] Dar no prompt a informação que o usuário pode digitar os nomes dos componentes de forma incorreta
+      e por isso o modelo pode encontrar nomes de componentes errados, faltando ou sobrando letras.
+
+# Melhorias futuras
+
+- [ ] Extensão no navegador para ajudar com o nome dos componentes(tags no docx)

@@ -415,7 +415,7 @@ def build_html_page(
 
     css_tags = f'<link rel="stylesheet" href="{css}">' if css else ""
     js_tags = f'<script src="{js}"></script>' if js else ""
-
+    
     # Monta conteúdo na ordem recebida
     conteudo = "\n\n".join(partes)
     

@@ -1,1406 +1,610 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Construtor de Aulas CAEd</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    [hidden] { display: none !important; }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Construtor de Aulas CAEd</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/web/assets/css/style.css" />
+  </head>
+  <body>
+    <a href="#main-content" class="skip-link">Pular para o conteúdo</a>
 
-    :root {
-      --brand:        #1E40AF;
-      --brand-hover:  #3B82F6;
-      --brand-light:  #EFF6FF;
-      --brand-accent: #DBEAFE;
-      --success:      #22C55E;
-      --success-dark: #15803D;
-      --success-bg:   #f0fdf4;
-      --gold:         #F59E0B;
-      --gold-bg:      #fffbeb;
-      --danger:       #dc2626;
-      --danger-bg:    #fef2f2;
-      --gray-50:      #F8FAFC;
-      --gray-100:     #F1F5F9;
-      --gray-200:     #E2E8F0;
-      --gray-400:     #94A3B8;
-      --gray-500:     #64748B;
-      --gray-600:     #475569;
-      --gray-700:     #334155;
-      --gray-900:     #0F172A;
-      --radius:       10px;
-      --transition:   0.18s ease;
-      --header-h:     60px;
-      --sidebar-w:    224px;
-      --sidebar-cw:   60px;
-    }
+    <!-- ── Header ─────────────────────────────────────────────── -->
+    <header>
+      <button
+        class="sidebar-toggle"
+        id="sidebar-toggle"
+        aria-label="Alternar menu lateral"
+        title="Alternar menu"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="2"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
+          />
+        </svg>
+      </button>
+      <div class="header-icon">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="1.5"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 13.5h7.5M16.5 13.5v7.5M20.25 13.5H13.5"
+          />
+        </svg>
+      </div>
+      <span class="header-title">Construtor de Aulas CAEd</span>
+      <span class="header-sep">v1.0</span>
+    </header>
 
-    body {
-      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
-      background: var(--gray-50);
-      color: var(--gray-900);
-      min-height: 100vh;
-      line-height: 1.5;
-    }
+    <!-- Mobile overlay -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
-    /* ── Skip link ───────────────────────────────────────────── */
-    .skip-link {
-      position: absolute;
-      top: -48px;
-      left: 1rem;
-      background: var(--brand);
-      color: #fff;
-      padding: 0.5rem 1rem;
-      border-radius: 0 0 8px 8px;
-      font-size: 0.875rem;
-      font-weight: 600;
-      z-index: 100;
-      transition: top 0.15s ease;
-      text-decoration: none;
-    }
-    .skip-link:focus { top: 0; }
-
-    /* ── Header ─────────────────────────────────────────────── */
-    header {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      height: var(--header-h);
-      background: #0F172A;
-      color: #fff;
-      border-bottom: 1px solid rgba(255,255,255,.06);
-      z-index: 20;
-      display: flex;
-      align-items: center;
-      padding: 0 1.25rem;
-      gap: 0.75rem;
-    }
-
-    .sidebar-toggle {
-      background: none;
-      border: none;
-      color: rgba(255,255,255,.6);
-      cursor: pointer;
-      padding: 0.4rem;
-      border-radius: 6px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: color var(--transition), background var(--transition);
-      flex-shrink: 0;
-    }
-    .sidebar-toggle:hover { color: #fff; background: rgba(255,255,255,.1); }
-    .sidebar-toggle:focus-visible { outline: 2px solid var(--brand-hover); outline-offset: 2px; }
-    .sidebar-toggle svg { width: 20px; height: 20px; }
-
-    .header-icon {
-      width: 34px; height: 34px;
-      background: rgba(245,158,11,.15);
-      border: 1px solid rgba(245,158,11,.25);
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
-    .header-icon svg { width: 18px; height: 18px; color: #F59E0B; }
-
-    .header-title {
-      font-size: 0.95rem;
-      font-weight: 700;
-      letter-spacing: -.01em;
-      white-space: nowrap;
-    }
-    .header-sep {
-      margin-left: auto;
-      font-size: 0.75rem;
-      color: rgba(255,255,255,.3);
-      white-space: nowrap;
-    }
-
-    /* ── App layout ──────────────────────────────────────────── */
-    .app-layout {
-      display: flex;
-      min-height: 100vh;
-      padding-top: var(--header-h);
-    }
-
-    /* ── Sidebar ─────────────────────────────────────────────── */
-    .sidebar {
-      position: fixed;
-      top: var(--header-h);
-      left: 0;
-      bottom: 0;
-      width: var(--sidebar-w);
-      background: #fff;
-      border-right: 1px solid var(--gray-200);
-      z-index: 10;
-      overflow-y: auto;
-      overflow-x: hidden;
-      transition: width var(--transition);
-      display: flex;
-      flex-direction: column;
-    }
-
-    .nav-section {
-      padding: 1rem 0.75rem 0.5rem;
-    }
-    .nav-section + .nav-section {
-      border-top: 1px solid var(--gray-200);
-      padding-top: 0.75rem;
-    }
-    .nav-section-label {
-      font-size: 0.68rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: var(--gray-400);
-      padding: 0 0.75rem;
-      margin-bottom: 0.4rem;
-      white-space: nowrap;
-      overflow: hidden;
-      transition: opacity var(--transition);
-    }
-
-    .nav-list { list-style: none; display: flex; flex-direction: column; gap: 0.15rem; }
-
-    .nav-item {
-      width: 100%;
-      display: flex;
-      align-items: center;
-      gap: 0.7rem;
-      padding: 0.6rem 0.75rem;
-      border: none;
-      background: none;
-      border-radius: 8px;
-      cursor: pointer;
-      color: var(--gray-600);
-      font-family: inherit;
-      font-size: 0.875rem;
-      font-weight: 500;
-      text-align: left;
-      transition: background var(--transition), color var(--transition);
-      white-space: nowrap;
-      overflow: hidden;
-      min-height: 44px;
-    }
-    .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
-    .nav-item .nav-label { overflow: hidden; transition: opacity var(--transition), width var(--transition); }
-    .nav-item:hover { background: var(--gray-100); color: var(--gray-900); }
-    .nav-item.is-active { background: var(--brand-light); color: var(--brand); font-weight: 600; }
-    .nav-item:focus-visible { outline: 2px solid var(--brand-hover); outline-offset: 2px; }
-
-    /* ── Collapsed sidebar ───────────────────────────────────── */
-    body.sidebar-collapsed .sidebar { width: var(--sidebar-cw); }
-    body.sidebar-collapsed .nav-label { opacity: 0; width: 0; }
-    body.sidebar-collapsed .nav-section-label { opacity: 0; }
-    body.sidebar-collapsed .nav-item { justify-content: center; padding: 0.6rem; }
-    body.sidebar-collapsed .app-main { margin-left: var(--sidebar-cw); }
-
-    /* ── Main content ────────────────────────────────────────── */
-    .app-main {
-      flex: 1;
-      margin-left: var(--sidebar-w);
-      padding: 2rem 1.5rem;
-      transition: margin-left var(--transition);
-      min-width: 0;
-    }
-    .content-wrap {
-      max-width: 860px;
-      margin: 0 auto;
-    }
-
-    /* ── View ────────────────────────────────────────────────── */
-    .view { display: flex; flex-direction: column; gap: 1.25rem; }
-    .view[hidden] { display: none !important; }
-
-    .view-title {
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: var(--gray-900);
-      margin-bottom: 0.25rem;
-    }
-    .view-subtitle {
-      font-size: 0.875rem;
-      color: var(--gray-500);
-    }
-
-    /* ── Card ───────────────────────────────────────────────── */
-    .card {
-      background: #fff;
-      border-radius: var(--radius);
-      border: 1px solid var(--gray-200);
-      overflow: hidden;
-    }
-    .card-header {
-      padding: 0.875rem 1.25rem;
-      border-bottom: 1px solid var(--gray-200);
-      background: var(--gray-50);
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-      font-size: 0.875rem;
-      font-weight: 600;
-      color: var(--gray-700);
-    }
-    .card-header svg { color: var(--brand); flex-shrink: 0; width: 16px; height: 16px; }
-    .card-body { padding: 1.25rem; }
-
-    /* ── Drop zone ──────────────────────────────────────────── */
-    #drop-zone {
-      border: 2px dashed var(--gray-200);
-      border-radius: 8px;
-      padding: 3rem 2rem;
-      text-align: center;
-      cursor: pointer;
-      transition: border-color var(--transition), background var(--transition);
-      position: relative;
-      background: var(--gray-50);
-    }
-    #drop-zone:hover,
-    #drop-zone.drag-over {
-      border-color: var(--brand-hover);
-      background: var(--brand-light);
-    }
-    #drop-zone input[type="file"] {
-      position: absolute; inset: 0;
-      opacity: 0; cursor: pointer;
-      width: 100%; height: 100%;
-    }
-    .drop-icon {
-      width: 56px; height: 56px;
-      margin: 0 auto 1rem;
-      background: var(--gray-100);
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      transition: background var(--transition);
-    }
-    #drop-zone:hover .drop-icon,
-    #drop-zone.drag-over .drop-icon { background: var(--brand-accent); }
-    .drop-icon svg { width: 24px; height: 24px; color: var(--gray-500); transition: color var(--transition); }
-    #drop-zone:hover .drop-icon svg,
-    #drop-zone.drag-over .drop-icon svg { color: var(--brand); }
-    .drop-title { font-weight: 600; font-size: 0.95rem; color: var(--gray-700); }
-    .drop-subtitle { font-size: 0.82rem; color: var(--gray-400); margin-top: 0.35rem; }
-
-    /* File info */
-    #file-info {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 0.75rem 1rem;
-      background: var(--success-bg);
-      border: 1px solid #bbf7d0;
-      border-radius: 8px;
-      margin-top: 0.75rem;
-    }
-    #file-info[hidden] { display: none; }
-    .file-info-icon {
-      width: 36px; height: 36px;
-      background: #dcfce7;
-      border-radius: 8px;
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
-    }
-    .file-info-icon svg { width: 18px; height: 18px; color: var(--success-dark); }
-    .file-info-name { font-size: 0.875rem; font-weight: 600; color: var(--gray-700); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .file-info-size { font-size: 0.775rem; color: var(--gray-500); margin-top: 0.1rem; }
-    .file-info-clear {
-      margin-left: auto;
-      background: none; border: none; cursor: pointer;
-      color: var(--gray-400); padding: 0.2rem; border-radius: 4px;
-      display: flex; transition: color var(--transition); flex-shrink: 0;
-    }
-    .file-info-clear:hover { color: var(--danger); }
-    .file-info-clear svg { width: 16px; height: 16px; }
-
-    /* ── Form fields ────────────────────────────────────────── */
-    .field { margin-top: 1.25rem; }
-    .field label {
-      display: block;
-      font-weight: 600;
-      font-size: 0.78rem;
-      margin-bottom: 0.4rem;
-      color: var(--gray-700);
-      text-transform: uppercase;
-      letter-spacing: .04em;
-    }
-    .field select {
-      width: 100%;
-      padding: 0.6rem 0.85rem;
-      border: 1px solid var(--gray-200);
-      border-radius: 8px;
-      font-size: 0.9rem;
-      background: var(--gray-50);
-      color: var(--gray-900);
-      font-family: inherit;
-      appearance: auto;
-      transition: border-color var(--transition);
-    }
-    .field select:focus {
-      outline: 2px solid var(--brand-hover);
-      outline-offset: 2px;
-      border-color: var(--brand-hover);
-    }
-
-    #profile-desc {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.35rem;
-      margin-top: 0.5rem;
-      font-size: 0.78rem;
-      color: var(--gray-500);
-      min-height: 1.2rem;
-    }
-    #profile-desc:not(:empty)::before {
-      content: '';
-      display: inline-block;
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: var(--brand-hover);
-      flex-shrink: 0;
-    }
-
-    /* ── Toggle (mock mode) ─────────────────────────────────── */
-    .toggle-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0.85rem 1rem;
-      background: var(--gold-bg);
-      border: 1px solid #fde68a;
-      border-radius: 8px;
-      margin-top: 1.25rem;
-      gap: 1rem;
-    }
-    .toggle-row.inactive { background: var(--gray-50); border-color: var(--gray-200); }
-    .toggle-label { font-size: 0.875rem; font-weight: 600; color: var(--gray-700); }
-    .toggle-label span { display: block; font-weight: 400; font-size: 0.775rem; color: var(--gray-500); margin-top: 0.1rem; }
-    .toggle { position: relative; width: 40px; height: 22px; flex-shrink: 0; }
-    .toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
-    .toggle-track {
-      position: absolute; inset: 0;
-      background: var(--gray-200);
-      border-radius: 11px;
-      cursor: pointer;
-      transition: background var(--transition);
-    }
-    .toggle input:checked + .toggle-track { background: var(--gold); }
-    .toggle-track::after {
-      content: '';
-      position: absolute;
-      left: 3px; top: 3px;
-      width: 16px; height: 16px;
-      background: #fff;
-      border-radius: 50%;
-      transition: transform var(--transition);
-      box-shadow: 0 1px 3px rgba(0,0,0,.2);
-    }
-    .toggle input:checked + .toggle-track::after { transform: translateX(18px); }
-
-    /* ── Submit button ──────────────────────────────────────── */
-    .btn-primary {
-      width: 100%;
-      background: var(--brand);
-      color: #fff;
-      border: none;
-      padding: 0.75rem;
-      border-radius: 12px;
-      font-size: 0.95rem;
-      font-weight: 600;
-      cursor: pointer;
-      margin-top: 1.5rem;
-      transition: background var(--transition);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      font-family: inherit;
-      min-height: 44px;
-    }
-    .btn-primary:hover:not(:disabled) { background: var(--brand-hover); }
-    .btn-primary:focus-visible { outline: 2px solid var(--brand-hover); outline-offset: 2px; }
-    .btn-primary:disabled { background: var(--gray-400); cursor: not-allowed; }
-    .btn-primary svg { width: 18px; height: 18px; }
-
-    /* ── Spinner ────────────────────────────────────────────── */
-    .spinner-body {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 1rem;
-      padding: 2.5rem;
-      text-align: center;
-    }
-    .spinner-ring {
-      width: 44px; height: 44px;
-      border: 2px solid var(--gray-200);
-      border-top-color: var(--brand);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      flex-shrink: 0;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .spinner-title { font-weight: 600; color: var(--gray-700); font-size: 0.95rem; }
-    .spinner-sub { font-size: 0.82rem; color: var(--gray-400); }
-
-    /* ── Error box ──────────────────────────────────────────── */
-    #error-box {
-      display: flex;
-      gap: 0.85rem;
-      align-items: flex-start;
-      background: var(--danger-bg);
-      border: 1px solid #fecaca;
-      border-left: 4px solid var(--danger);
-      padding: 1rem 1.25rem;
-      border-radius: 8px;
-      font-size: 0.875rem;
-    }
-    #error-box svg { width: 18px; height: 18px; color: var(--danger); flex-shrink: 0; margin-top: 1px; }
-    #error-box strong { display: block; font-weight: 600; color: var(--danger); margin-bottom: 0.2rem; }
-    #error-message { color: var(--gray-700); }
-
-    /* ── Result ─────────────────────────────────────────────── */
-    .result-toolbar {
-      padding: 0.85rem 1.25rem;
-      background: var(--gray-50);
-      border-bottom: 1px solid var(--gray-200);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-      flex-wrap: wrap;
-    }
-    .result-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      font-size: 0.82rem;
-      font-weight: 600;
-      color: var(--success-dark);
-      background: var(--success-bg);
-      border: 1px solid #bbf7d0;
-      padding: 0.3rem 0.75rem;
-      border-radius: 99px;
-    }
-    .result-badge svg { width: 13px; height: 13px; animation: checkIn 0.3s ease both; }
-    @keyframes checkIn { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; transform: scale(1); } }
-    .toolbar-actions { display: flex; gap: 0.5rem; }
-    .btn-download {
-      background: var(--success);
-      color: #fff;
-      text-decoration: none;
-      padding: 0.45rem 1rem;
-      border-radius: 8px;
-      font-size: 0.82rem;
-      font-weight: 600;
-      transition: background var(--transition);
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      min-height: 44px;
-    }
-    .btn-download:hover { background: var(--success-dark); }
-    .btn-download svg { width: 14px; height: 14px; }
-    .btn-new {
-      background: #fff;
-      color: var(--gray-700);
-      border: 1px solid var(--gray-200);
-      padding: 0.45rem 1rem;
-      border-radius: 8px;
-      font-size: 0.82rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background var(--transition);
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      font-family: inherit;
-      min-height: 44px;
-    }
-    .btn-new:hover { background: var(--gray-100); }
-    .btn-new svg { width: 14px; height: 14px; }
-
-    #preview-frame {
-      width: 100%;
-      height: 640px;
-      border: none;
-      display: block;
-      background: var(--gray-50);
-    }
-
-    /* ── Profiles view ──────────────────────────────────────── */
-    .profile-card {
-      border: 1px solid var(--gray-200);
-      border-radius: var(--radius);
-      overflow: hidden;
-    }
-    .profile-card-header {
-      padding: 1rem 1.25rem;
-      background: var(--gray-50);
-      border-bottom: 1px solid var(--gray-200);
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 1rem;
-    }
-    .profile-name {
-      font-size: 0.875rem;
-      font-weight: 700;
-      color: var(--gray-900);
-    }
-    .profile-desc-text {
-      font-size: 0.8rem;
-      color: var(--gray-500);
-      margin-top: 0.2rem;
-    }
-    .profile-badge {
-      font-size: 0.72rem;
-      font-weight: 600;
-      background: var(--brand-accent);
-      color: var(--brand);
-      padding: 0.2rem 0.6rem;
-      border-radius: 99px;
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
-    .profile-card-body { padding: 1rem 1.25rem; }
-    .profile-meta {
-      font-size: 0.78rem;
-      color: var(--gray-500);
-      margin-bottom: 0.85rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.2rem;
-    }
-    .profile-meta code {
-      background: var(--gray-100);
-      padding: 0.1rem 0.35rem;
-      border-radius: 4px;
-      font-size: 0.75rem;
-      color: var(--gray-700);
-      font-family: 'Fira Code', monospace;
-    }
-    .comp-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
-    .comp-table th {
-      text-align: left;
-      font-size: 0.68rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--gray-400);
-      padding: 0.4rem 0.6rem;
-      border-bottom: 1px solid var(--gray-200);
-    }
-    .comp-table td {
-      padding: 0.5rem 0.6rem;
-      border-bottom: 1px solid var(--gray-100);
-      color: var(--gray-700);
-    }
-    .comp-table tr:last-child td { border-bottom: none; }
-    .comp-tag {
-      display: inline-flex;
-      align-items: center;
-      background: var(--gray-100);
-      color: var(--gray-700);
-      font-size: 0.75rem;
-      font-weight: 600;
-      padding: 0.15rem 0.5rem;
-      border-radius: 4px;
-    }
-
-    /* ── Templates view ─────────────────────────────────────── */
-    .templates-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 1rem;
-    }
-    .template-group {
-      border: 1px solid var(--gray-200);
-      border-radius: var(--radius);
-      overflow: hidden;
-    }
-    .template-group-header {
-      padding: 0.75rem 1rem;
-      background: var(--gray-50);
-      border-bottom: 1px solid var(--gray-200);
-      font-size: 0.82rem;
-      font-weight: 700;
-      color: var(--gray-900);
-      text-transform: capitalize;
-    }
-    .template-group-body { padding: 0.75rem 1rem; display: flex; flex-direction: column; gap: 0.4rem; }
-    .template-version {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 0.8rem;
-      color: var(--gray-600);
-    }
-    .template-version::before {
-      content: '';
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: var(--success);
-      flex-shrink: 0;
-    }
-
-    /* ── Sobre view ─────────────────────────────────────────── */
-    .sobre-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem;
-    }
-    .info-card {
-      border: 1px solid var(--gray-200);
-      border-radius: var(--radius);
-      padding: 1.25rem;
-    }
-    .info-card-title {
-      font-size: 0.78rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--gray-400);
-      margin-bottom: 0.75rem;
-    }
-    .info-list { display: flex; flex-direction: column; gap: 0.5rem; }
-    .info-item {
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-      font-size: 0.875rem;
-      color: var(--gray-700);
-    }
-    .info-item svg { width: 16px; height: 16px; color: var(--brand); flex-shrink: 0; }
-    .pipeline-steps { display: flex; flex-direction: column; gap: 0.5rem; }
-    .pipeline-step {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      font-size: 0.875rem;
-      color: var(--gray-700);
-    }
-    .step-num {
-      width: 24px; height: 24px;
-      background: var(--brand-light);
-      color: var(--brand);
-      border-radius: 50%;
-      font-size: 0.72rem;
-      font-weight: 700;
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
-    }
-    .step-arrow {
-      font-size: 0.75rem;
-      color: var(--gray-400);
-      padding-left: calc(24px + 0.75rem);
-    }
-
-    /* ── Loading state (views) ──────────────────────────────── */
-    .view-loading {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 2rem;
-      color: var(--gray-500);
-      font-size: 0.875rem;
-    }
-
-    /* ── Animations ─────────────────────────────────────────── */
-    .fade-in { animation: fadeIn 0.25s ease; }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(6px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    /* ── Reduced motion ─────────────────────────────────────── */
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after {
-        animation-duration: 0.01ms !important;
-        transition-duration: 0.01ms !important;
-      }
-    }
-
-    /* ── Responsive ─────────────────────────────────────────── */
-    @media (max-width: 768px) {
-      .sidebar {
-        transform: translateX(-100%);
-        transition: transform var(--transition), width var(--transition);
-        width: var(--sidebar-w) !important;
-        z-index: 30;
-      }
-      body.sidebar-open .sidebar { transform: translateX(0); }
-      body.sidebar-open .sidebar-overlay { display: block; }
-      .app-main { margin-left: 0 !important; }
-      body.sidebar-collapsed .app-main { margin-left: 0 !important; }
-      .sobre-grid { grid-template-columns: 1fr; }
-      #preview-frame { height: 400px; }
-    }
-    @media (max-width: 500px) {
-      .app-main { padding: 1.25rem 1rem; }
-      .templates-grid { grid-template-columns: 1fr 1fr; }
-    }
-
-    /* Mobile overlay */
-    .sidebar-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      top: var(--header-h);
-      background: rgba(0,0,0,.4);
-      z-index: 25;
-    }
-  </style>
-</head>
-<body>
-
-<a href="#main-content" class="skip-link">Pular para o conteúdo</a>
-
-<!-- ── Header ─────────────────────────────────────────────── -->
-<header>
-  <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Alternar menu lateral" title="Alternar menu">
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-    </svg>
-  </button>
-  <div class="header-icon">
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round"
-        d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 13.5h7.5M16.5 13.5v7.5M20.25 13.5H13.5" />
-    </svg>
-  </div>
-  <span class="header-title">Construtor de Aulas CAEd</span>
-  <span class="header-sep">v1.0</span>
-</header>
-
-<!-- Mobile overlay -->
-<div class="sidebar-overlay" id="sidebar-overlay"></div>
-
-<!-- ── App layout ──────────────────────────────────────────── -->
-<div class="app-layout">
-
-  <!-- ── Sidebar ───────────────────────────────────────────── -->
-  <nav class="sidebar" id="sidebar" aria-label="Navegação principal">
-
-    <div class="nav-section">
-      <div class="nav-section-label">Principal</div>
-      <ul class="nav-list" role="list">
-        <li>
-          <button class="nav-item is-active" data-view="converter" aria-current="page">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round"
-                d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" />
-            </svg>
-            <span class="nav-label">Gerar Aula</span>
-          </button>
-        </li>
-      </ul>
-    </div>
-
-    <div class="nav-section">
-      <div class="nav-section-label">Configuração</div>
-      <ul class="nav-list" role="list">
-        <li>
-          <button class="nav-item" data-view="profiles">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round"
-                d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Zm6-10.125a1.875 1.875 0 1 1-3.75 0 1.875 1.875 0 0 1 3.75 0Zm1.294 6.336a6.721 6.721 0 0 1-3.17.789 6.721 6.721 0 0 1-3.168-.789 3.376 3.376 0 0 1 6.338 0Z" />
-            </svg>
-            <span class="nav-label">Profiles</span>
-          </button>
-        </li>
-        <li>
-          <button class="nav-item" data-view="templates">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round"
-                d="M2.25 7.125C2.25 6.504 2.754 6 3.375 6h6c.621 0 1.125.504 1.125 1.125v3.75c0 .621-.504 1.125-1.125 1.125h-6a1.125 1.125 0 0 1-1.125-1.125v-3.75ZM14.25 8.625c0-.621.504-1.125 1.125-1.125h5.25c.621 0 1.125.504 1.125 1.125v8.25c0 .621-.504 1.125-1.125 1.125h-5.25a1.125 1.125 0 0 1-1.125-1.125v-8.25ZM3.75 16.125c0-.621.504-1.125 1.125-1.125h5.25c.621 0 1.125.504 1.125 1.125v2.25c0 .621-.504 1.125-1.125 1.125h-5.25a1.125 1.125 0 0 1-1.125-1.125v-2.25Z" />
-            </svg>
-            <span class="nav-label">Templates</span>
-          </button>
-        </li>
-      </ul>
-    </div>
-
-    <div class="nav-section">
-      <ul class="nav-list" role="list">
-        <li>
-          <button class="nav-item" data-view="sobre">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round"
-                d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
-            </svg>
-            <span class="nav-label">Sobre</span>
-          </button>
-        </li>
-      </ul>
-    </div>
-
-  </nav>
-
-  <!-- ── Main content ───────────────────────────────────────── -->
-  <main class="app-main" id="main-content">
-    <div class="content-wrap">
-
-      <!-- ════════════════════════════════════════════════════ -->
-      <!-- VIEW: Gerar Aula                                     -->
-      <!-- ════════════════════════════════════════════════════ -->
-      <div class="view" id="view-converter">
-
-        <!-- Form card -->
-        <div class="card" id="form-section">
-          <div class="card-header">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round"
-                d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-            </svg>
-            Configurar conversão
-          </div>
-          <div class="card-body">
-            <form id="convert-form">
-
-              <div id="drop-zone" role="button" aria-label="Selecionar arquivo .docx">
-                <input type="file" id="file-input" accept=".docx" required aria-label="Arquivo .docx">
-                <div class="drop-icon">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                      d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
-                  </svg>
-                </div>
-                <p class="drop-title">Arraste o arquivo aqui ou clique para selecionar</p>
-                <p class="drop-subtitle">Aceita arquivos <strong>.docx</strong></p>
-              </div>
-
-              <div id="file-info" hidden>
-                <div class="file-info-icon">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                      d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-                  </svg>
-                </div>
-                <div style="overflow: hidden; flex: 1;">
-                  <div class="file-info-name" id="file-info-name"></div>
-                  <div class="file-info-size" id="file-info-size"></div>
-                </div>
-                <button type="button" class="file-info-clear" id="clear-file" title="Remover arquivo">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-
-              <div class="field">
-                <label for="profile-select">Profile</label>
-                <select id="profile-select"></select>
-                <small id="profile-desc"></small>
-              </div>
-
-              <div class="toggle-row inactive" id="toggle-row">
-                <div class="toggle-label">
-                  Modo teste (sem API)
-                  <span>Usa extração por regex sem consumir créditos Claude</span>
-                </div>
-                <label class="toggle">
-                  <input type="checkbox" id="mock-checkbox">
-                  <div class="toggle-track"></div>
-                </label>
-              </div>
-
-              <button type="submit" class="btn-primary" id="submit-btn">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" />
+    <!-- ── App layout ──────────────────────────────────────────── -->
+    <div class="app-layout">
+      <!-- ── Sidebar ───────────────────────────────────────────── -->
+      <nav class="sidebar" id="sidebar" aria-label="Navegação principal">
+        <div class="nav-section">
+          <div class="nav-section-label">Principal</div>
+          <ul class="nav-list" role="list">
+            <li>
+              <button
+                class="nav-item is-active"
+                data-view="converter"
+                aria-current="page"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.75"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"
+                  />
                 </svg>
-                Converter documento
+                <span class="nav-label">Gerar Aula</span>
               </button>
-
-            </form>
-          </div>
+            </li>
+          </ul>
         </div>
 
-        <!-- Loading -->
-        <div class="card" id="spinner" hidden>
-          <div class="spinner-body">
-            <div class="spinner-ring"></div>
-            <div>
-              <p class="spinner-title">Convertendo documento…</p>
-              <p class="spinner-sub">Isso pode levar alguns segundos</p>
+        <div class="nav-section">
+          <div class="nav-section-label">Configuração</div>
+          <ul class="nav-list" role="list">
+            <li>
+              <button class="nav-item" data-view="profiles">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.75"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Zm6-10.125a1.875 1.875 0 1 1-3.75 0 1.875 1.875 0 0 1 3.75 0Zm1.294 6.336a6.721 6.721 0 0 1-3.17.789 6.721 6.721 0 0 1-3.168-.789 3.376 3.376 0 0 1 6.338 0Z"
+                  />
+                </svg>
+                <span class="nav-label">Profiles</span>
+              </button>
+            </li>
+            <li>
+              <button class="nav-item" data-view="templates">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.75"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M2.25 7.125C2.25 6.504 2.754 6 3.375 6h6c.621 0 1.125.504 1.125 1.125v3.75c0 .621-.504 1.125-1.125 1.125h-6a1.125 1.125 0 0 1-1.125-1.125v-3.75ZM14.25 8.625c0-.621.504-1.125 1.125-1.125h5.25c.621 0 1.125.504 1.125 1.125v8.25c0 .621-.504 1.125-1.125 1.125h-5.25a1.125 1.125 0 0 1-1.125-1.125v-8.25ZM3.75 16.125c0-.621.504-1.125 1.125-1.125h5.25c.621 0 1.125.504 1.125 1.125v2.25c0 .621-.504 1.125-1.125 1.125h-5.25a1.125 1.125 0 0 1-1.125-1.125v-2.25Z"
+                  />
+                </svg>
+                <span class="nav-label">Templates</span>
+              </button>
+            </li>
+          </ul>
+        </div>
+
+        <div class="nav-section">
+          <ul class="nav-list" role="list">
+            <li>
+              <button class="nav-item" data-view="sobre">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.75"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"
+                  />
+                </svg>
+                <span class="nav-label">Sobre</span>
+              </button>
+            </li>
+          </ul>
+        </div>
+      </nav>
+
+      <!-- ── Main content ───────────────────────────────────────── -->
+      <main class="app-main" id="main-content">
+        <div class="content-wrap">
+          <!-- ════════════════════════════════════════════════════ -->
+          <!-- VIEW: Gerar Aula                                     -->
+          <!-- ════════════════════════════════════════════════════ -->
+          <div class="view" id="view-converter">
+            <!-- Form card -->
+            <div class="card" id="form-section">
+              <div class="card-header">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="2"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"
+                  />
+                </svg>
+                Configurar conversão
+              </div>
+              <div class="card-body">
+                <form id="convert-form">
+                  <div
+                    id="drop-zone"
+                    role="button"
+                    aria-label="Selecionar arquivo .docx"
+                  >
+                    <input
+                      type="file"
+                      id="file-input"
+                      accept=".docx"
+                      required
+                      aria-label="Arquivo .docx"
+                    />
+                    <div class="drop-icon">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="1.5"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"
+                        />
+                      </svg>
+                    </div>
+                    <p class="drop-title">
+                      Arraste o arquivo aqui ou clique para selecionar
+                    </p>
+                    <p class="drop-subtitle">
+                      Aceita arquivos <strong>.docx</strong>
+                    </p>
+                  </div>
+
+                  <div id="file-info" hidden>
+                    <div class="file-info-icon">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="1.5"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"
+                        />
+                      </svg>
+                    </div>
+                    <div style="overflow: hidden; flex: 1">
+                      <div class="file-info-name" id="file-info-name"></div>
+                      <div class="file-info-size" id="file-info-size"></div>
+                    </div>
+                    <button
+                      type="button"
+                      class="file-info-clear"
+                      id="clear-file"
+                      title="Remover arquivo"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="2"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M6 18 18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+
+                  <div class="field">
+                    <label for="profile-select">Profile</label>
+                    <select id="profile-select"></select>
+                    <small id="profile-desc"></small>
+                  </div>
+
+                  <div class="toggle-row inactive" id="toggle-row">
+                    <div class="toggle-label">
+                      Modo teste (sem API)
+                      <span
+                        >Usa extração por regex sem consumir créditos
+                        Claude</span
+                      >
+                    </div>
+                    <label class="toggle">
+                      <input type="checkbox" id="mock-checkbox" />
+                      <div class="toggle-track"></div>
+                    </label>
+                  </div>
+
+                  <button type="submit" class="btn-primary" id="submit-btn">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke-width="2"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"
+                      />
+                    </svg>
+                    Converter documento
+                  </button>
+                </form>
+              </div>
             </div>
-          </div>
-        </div>
 
-        <!-- Error -->
-        <div id="error-box" hidden role="alert">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
-          </svg>
-          <div>
-            <strong>Erro ao converter</strong>
-            <span id="error-message"></span>
-          </div>
-        </div>
+            <!-- Loading -->
+            <div class="card" id="spinner" hidden>
+              <div class="spinner-body">
+                <div class="spinner-ring"></div>
+                <div>
+                  <p class="spinner-title">Convertendo documento…</p>
+                  <p class="spinner-sub">Isso pode levar alguns segundos</p>
+                </div>
+              </div>
+            </div>
 
-        <!-- Result -->
-        <div class="card fade-in" id="result-section" hidden>
-          <div class="result-toolbar">
-            <div class="result-badge">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+            <!-- Error -->
+            <div id="error-box" hidden role="alert">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"
+                />
               </svg>
-              Conversão concluída
+              <div>
+                <strong>Erro ao converter</strong>
+                <span id="error-message"></span>
+              </div>
             </div>
-            <div class="toolbar-actions">
-              <button class="btn-new" id="btn-new">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                </svg>
-                Nova conversão
-              </button>
-              <a id="download-link" class="btn-download" download>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                </svg>
-                Baixar HTML
-              </a>
+
+            <!-- Result -->
+            <div class="card fade-in" id="result-section" hidden>
+              <div class="result-toolbar">
+                <div class="result-badge">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="2.5"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="m4.5 12.75 6 6 9-13.5"
+                    />
+                  </svg>
+                  Conversão concluída
+                </div>
+                <div class="toolbar-actions">
+                  <button class="btn-new" id="btn-new">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke-width="2"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M12 4.5v15m7.5-7.5h-15"
+                      />
+                    </svg>
+                    Nova conversão
+                  </button>
+                  <a id="download-link" class="btn-download" download>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke-width="2"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"
+                      />
+                    </svg>
+                    Baixar HTML
+                  </a>
+                </div>
+              </div>
+              <iframe id="preview-frame" title="Preview da aula"></iframe>
             </div>
           </div>
-          <iframe id="preview-frame" title="Preview da aula"></iframe>
-        </div>
+          <!-- /view-converter -->
 
-      </div><!-- /view-converter -->
-
-      <!-- ════════════════════════════════════════════════════ -->
-      <!-- VIEW: Profiles                                       -->
-      <!-- ════════════════════════════════════════════════════ -->
-      <div class="view" id="view-profiles" hidden>
-        <div>
-          <p class="view-title">Profiles</p>
-          <p class="view-subtitle">Configurações de componentes e bundles de assets disponíveis</p>
-        </div>
-        <div id="profiles-list">
-          <div class="view-loading">
-            <div class="spinner-ring" style="width:24px;height:24px;border-width:2px"></div>
-            Carregando profiles…
-          </div>
-        </div>
-      </div>
-
-      <!-- ════════════════════════════════════════════════════ -->
-      <!-- VIEW: Templates                                      -->
-      <!-- ════════════════════════════════════════════════════ -->
-      <div class="view" id="view-templates" hidden>
-        <div>
-          <p class="view-title">Templates</p>
-          <p class="view-subtitle">Versões de templates Jinja2 disponíveis por tipo de componente</p>
-        </div>
-        <div class="card">
-          <div class="card-header">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round"
-                d="M2.25 7.125C2.25 6.504 2.754 6 3.375 6h6c.621 0 1.125.504 1.125 1.125v3.75c0 .621-.504 1.125-1.125 1.125h-6a1.125 1.125 0 0 1-1.125-1.125v-3.75ZM14.25 8.625c0-.621.504-1.125 1.125-1.125h5.25c.621 0 1.125.504 1.125 1.125v8.25c0 .621-.504 1.125-1.125 1.125h-5.25a1.125 1.125 0 0 1-1.125-1.125v-8.25ZM3.75 16.125c0-.621.504-1.125 1.125-1.125h5.25c.621 0 1.125.504 1.125 1.125v2.25c0 .621-.504 1.125-1.125 1.125h-5.25a1.125 1.125 0 0 1-1.125-1.125v-2.25Z" />
-            </svg>
-            Componentes e versões
-          </div>
-          <div class="card-body">
-            <div id="templates-list">
+          <!-- ════════════════════════════════════════════════════ -->
+          <!-- VIEW: Profiles                                       -->
+          <!-- ════════════════════════════════════════════════════ -->
+          <div class="view" id="view-profiles" hidden>
+            <div>
+              <p class="view-title">Profiles</p>
+              <p class="view-subtitle">
+                Configurações de componentes e bundles de assets disponíveis
+              </p>
+            </div>
+            <div id="profiles-list">
               <div class="view-loading">
-                <div class="spinner-ring" style="width:24px;height:24px;border-width:2px"></div>
-                Carregando templates…
+                <div
+                  class="spinner-ring"
+                  style="width: 24px; height: 24px; border-width: 2px"
+                ></div>
+                Carregando profiles…
               </div>
             </div>
           </div>
+
+          <!-- ════════════════════════════════════════════════════ -->
+          <!-- VIEW: Templates                                      -->
+          <!-- ════════════════════════════════════════════════════ -->
+          <div class="view" id="view-templates" hidden>
+            <div>
+              <p class="view-title">Templates</p>
+              <p class="view-subtitle">
+                Versões de templates Jinja2 disponíveis por tipo de componente
+              </p>
+            </div>
+            <div class="card">
+              <div class="card-header">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="2"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M2.25 7.125C2.25 6.504 2.754 6 3.375 6h6c.621 0 1.125.504 1.125 1.125v3.75c0 .621-.504 1.125-1.125 1.125h-6a1.125 1.125 0 0 1-1.125-1.125v-3.75ZM14.25 8.625c0-.621.504-1.125 1.125-1.125h5.25c.621 0 1.125.504 1.125 1.125v8.25c0 .621-.504 1.125-1.125 1.125h-5.25a1.125 1.125 0 0 1-1.125-1.125v-8.25ZM3.75 16.125c0-.621.504-1.125 1.125-1.125h5.25c.621 0 1.125.504 1.125 1.125v2.25c0 .621-.504 1.125-1.125 1.125h-5.25a1.125 1.125 0 0 1-1.125-1.125v-2.25Z"
+                  />
+                </svg>
+                Componentes e versões
+              </div>
+              <div class="card-body">
+                <div id="templates-list">
+                  <div class="view-loading">
+                    <div
+                      class="spinner-ring"
+                      style="width: 24px; height: 24px; border-width: 2px"
+                    ></div>
+                    Carregando templates…
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ════════════════════════════════════════════════════ -->
+          <!-- VIEW: Sobre                                          -->
+          <!-- ════════════════════════════════════════════════════ -->
+          <div class="view" id="view-sobre" hidden>
+            <div>
+              <p class="view-title">Sobre</p>
+              <p class="view-subtitle">
+                Informações sobre o Construtor de Aulas CAEd
+              </p>
+            </div>
+
+            <div class="sobre-grid">
+              <div class="info-card">
+                <div class="info-card-title">Pipeline</div>
+                <div class="pipeline-steps">
+                  <div class="pipeline-step">
+                    <span class="step-num">1</span> Extração via mammoth (.docx
+                    → HTML)
+                  </div>
+                  <div class="step-arrow">↓</div>
+                  <div class="pipeline-step">
+                    <span class="step-num">2</span> Parsing de tags de
+                    componentes
+                  </div>
+                  <div class="step-arrow">↓</div>
+                  <div class="pipeline-step">
+                    <span class="step-num">3</span> Extração estruturada (Claude
+                    API ou mock)
+                  </div>
+                  <div class="step-arrow">↓</div>
+                  <div class="pipeline-step">
+                    <span class="step-num">4</span> Renderização Jinja2 por
+                    template
+                  </div>
+                  <div class="step-arrow">↓</div>
+                  <div class="pipeline-step">
+                    <span class="step-num">5</span> Montagem da página HTML
+                    final
+                  </div>
+                </div>
+              </div>
+
+              <div class="info-card">
+                <div class="info-card-title">Componentes suportados</div>
+                <div class="info-list">
+                  <div class="info-item">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke-width="2"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="m4.5 12.75 6 6 9-13.5"
+                      />
+                    </svg>
+                    citacao — Bloco de citação
+                  </div>
+                  <div class="info-item">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke-width="2"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="m4.5 12.75 6 6 9-13.5"
+                      />
+                    </svg>
+                    atencao — Caixa de destaque
+                  </div>
+                  <div class="info-item">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke-width="2"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="m4.5 12.75 6 6 9-13.5"
+                      />
+                    </svg>
+                    carrossel — Slides navegáveis
+                  </div>
+                  <div class="info-item">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke-width="2"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="m4.5 12.75 6 6 9-13.5"
+                      />
+                    </svg>
+                    sanfona — Accordion expansível
+                  </div>
+                  <div class="info-item">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke-width="2"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="m4.5 12.75 6 6 9-13.5"
+                      />
+                    </svg>
+                    flipcards — Cards interativos
+                  </div>
+                </div>
+              </div>
+
+              <div class="info-card" style="grid-column: 1 / -1">
+                <div class="info-card-title">Stack técnico</div>
+                <div
+                  class="info-list"
+                  style="flex-direction: row; flex-wrap: wrap; gap: 0.5rem"
+                >
+                  <span class="comp-tag">Python 3.11+</span>
+                  <span class="comp-tag">FastAPI</span>
+                  <span class="comp-tag">mammoth</span>
+                  <span class="comp-tag">Jinja2</span>
+                  <span class="comp-tag">Claude API (Sonnet)</span>
+                  <span class="comp-tag">HTML / Vanilla JS</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- /view-sobre -->
         </div>
-      </div>
+        <!-- /content-wrap -->
+      </main>
+    </div>
+    <!-- /app-layout -->
 
-      <!-- ════════════════════════════════════════════════════ -->
-      <!-- VIEW: Sobre                                          -->
-      <!-- ════════════════════════════════════════════════════ -->
-      <div class="view" id="view-sobre" hidden>
-        <div>
-          <p class="view-title">Sobre</p>
-          <p class="view-subtitle">Informações sobre o Construtor de Aulas CAEd</p>
-        </div>
-
-        <div class="sobre-grid">
-          <div class="info-card">
-            <div class="info-card-title">Pipeline</div>
-            <div class="pipeline-steps">
-              <div class="pipeline-step"><span class="step-num">1</span> Extração via mammoth (.docx → HTML)</div>
-              <div class="step-arrow">↓</div>
-              <div class="pipeline-step"><span class="step-num">2</span> Parsing de tags de componentes</div>
-              <div class="step-arrow">↓</div>
-              <div class="pipeline-step"><span class="step-num">3</span> Extração estruturada (Claude API ou mock)</div>
-              <div class="step-arrow">↓</div>
-              <div class="pipeline-step"><span class="step-num">4</span> Renderização Jinja2 por template</div>
-              <div class="step-arrow">↓</div>
-              <div class="pipeline-step"><span class="step-num">5</span> Montagem da página HTML final</div>
-            </div>
-          </div>
-
-          <div class="info-card">
-            <div class="info-card-title">Componentes suportados</div>
-            <div class="info-list">
-              <div class="info-item">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                </svg>
-                citacao — Bloco de citação
-              </div>
-              <div class="info-item">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                </svg>
-                atencao — Caixa de destaque
-              </div>
-              <div class="info-item">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                </svg>
-                carrossel — Slides navegáveis
-              </div>
-              <div class="info-item">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                </svg>
-                sanfona — Accordion expansível
-              </div>
-              <div class="info-item">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                </svg>
-                flipcards — Cards interativos
-              </div>
-            </div>
-          </div>
-
-          <div class="info-card" style="grid-column: 1 / -1;">
-            <div class="info-card-title">Stack técnico</div>
-            <div class="info-list" style="flex-direction: row; flex-wrap: wrap; gap: 0.5rem;">
-              <span class="comp-tag">Python 3.11+</span>
-              <span class="comp-tag">FastAPI</span>
-              <span class="comp-tag">mammoth</span>
-              <span class="comp-tag">Jinja2</span>
-              <span class="comp-tag">Claude API (Sonnet)</span>
-              <span class="comp-tag">HTML / Vanilla JS</span>
-            </div>
-          </div>
-        </div>
-
-      </div><!-- /view-sobre -->
-
-    </div><!-- /content-wrap -->
-  </main>
-
-</div><!-- /app-layout -->
-
-<script>
-(function () {
-  'use strict';
-
-  // ── DOM refs ──────────────────────────────────────────────
-  const sidebarToggle  = document.getElementById('sidebar-toggle');
-  const sidebar        = document.getElementById('sidebar');
-  const sidebarOverlay = document.getElementById('sidebar-overlay');
-  const navItems       = document.querySelectorAll('.nav-item[data-view]');
-
-  const form        = document.getElementById('convert-form');
-  const fileInput   = document.getElementById('file-input');
-  const dropZone    = document.getElementById('drop-zone');
-  const fileInfo    = document.getElementById('file-info');
-  const fileInfoName= document.getElementById('file-info-name');
-  const fileInfoSize= document.getElementById('file-info-size');
-  const clearFile   = document.getElementById('clear-file');
-  const profileSel  = document.getElementById('profile-select');
-  const profileDesc = document.getElementById('profile-desc');
-  const mockCheck   = document.getElementById('mock-checkbox');
-  const toggleRow   = document.getElementById('toggle-row');
-  const submitBtn   = document.getElementById('submit-btn');
-  const spinner     = document.getElementById('spinner');
-  const errorBox    = document.getElementById('error-box');
-  const errorMsg    = document.getElementById('error-message');
-  const resultSec   = document.getElementById('result-section');
-  const dlLink      = document.getElementById('download-link');
-  const btnNew      = document.getElementById('btn-new');
-  const iframe      = document.getElementById('preview-frame');
-
-  const profilesList  = document.getElementById('profiles-list');
-  const templatesList = document.getElementById('templates-list');
-
-  // ── Sidebar toggle ────────────────────────────────────────
-  const isMobile = () => window.innerWidth <= 768;
-
-  sidebarToggle.addEventListener('click', function () {
-    if (isMobile()) {
-      document.body.classList.toggle('sidebar-open');
-    } else {
-      document.body.classList.toggle('sidebar-collapsed');
-    }
-  });
-
-  sidebarOverlay.addEventListener('click', function () {
-    document.body.classList.remove('sidebar-open');
-  });
-
-  // ── View navigation ───────────────────────────────────────
-  var profilesLoaded  = false;
-  var templatesLoaded = false;
-
-  navItems.forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      var viewId = 'view-' + btn.dataset.view;
-
-      // Update nav active state
-      navItems.forEach(function (b) {
-        b.classList.remove('is-active');
-        b.removeAttribute('aria-current');
-      });
-      btn.classList.add('is-active');
-      btn.setAttribute('aria-current', 'page');
-
-      // Show/hide views
-      document.querySelectorAll('.view').forEach(function (v) {
-        v.hidden = (v.id !== viewId);
-      });
-
-      // Lazy-load data views
-      if (viewId === 'view-profiles' && !profilesLoaded) loadProfiles();
-      if (viewId === 'view-templates' && !templatesLoaded) loadTemplates();
-
-      // Close mobile sidebar
-      if (isMobile()) document.body.classList.remove('sidebar-open');
-
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
-  });
-
-  // ── Profiles ──────────────────────────────────────────────
-  async function loadProfiles() {
-    try {
-      const res = await fetch('/api/profiles');
-      if (!res.ok) throw new Error('Falha ao carregar profiles.');
-      const profiles = await res.json();
-
-      // Populate select (converter view)
-      profiles.forEach(function (p) {
-        const opt = document.createElement('option');
-        opt.value = p.name;
-        opt.textContent = p.label || p.name;
-        opt.dataset.descricao = p.descricao || '';
-        profileSel.appendChild(opt);
-      });
-      updateProfileDesc();
-
-      // Render profiles view
-      if (!profiles.length) {
-        profilesList.innerHTML = '<p style="color:var(--gray-500);font-size:.875rem;padding:1rem 0">Nenhum profile encontrado.</p>';
-        profilesLoaded = true;
-        return;
-      }
-
-      var html = '';
-      profiles.forEach(function (p) {
-        var comps = p.componentes || {};
-        var compRows = Object.entries(comps).map(function (entry) {
-          return '<tr><td>' + entry[0] + '</td><td><span class="comp-tag">' + (entry[1].model || 'm1') + (entry[1].version || 'v1') + '</span></td></tr>';
-        }).join('');
-
-        html += '<div class="profile-card fade-in">'
-          + '<div class="profile-card-header">'
-          + '<div><div class="profile-name">' + escHtml(p.label || p.name) + '</div>'
-          + (p.descricao ? '<div class="profile-desc-text">' + escHtml(p.descricao) + '</div>' : '')
-          + '</div>'
-          + '<span class="profile-badge">' + escHtml(p.name) + '</span>'
-          + '</div>'
-          + '<div class="profile-card-body">'
-          + '<div class="profile-meta">'
-          + (p.css ? '<div>CSS: <code>' + escHtml(p.css) + '</code></div>' : '')
-          + (p.js  ? '<div>JS: <code>'  + escHtml(p.js)  + '</code></div>' : '')
-          + '</div>'
-          + (compRows ? '<table class="comp-table"><thead><tr><th>Componente</th><th>Versão</th></tr></thead><tbody>' + compRows + '</tbody></table>' : '')
-          + '</div></div>';
-      });
-
-      profilesList.innerHTML = '<div style="display:flex;flex-direction:column;gap:1rem">' + html + '</div>';
-      profilesLoaded = true;
-
-    } catch (err) {
-      profilesList.innerHTML = '<p style="color:var(--danger);font-size:.875rem;padding:1rem 0">' + escHtml(err.message) + '</p>';
-    }
-  }
-
-  function updateProfileDesc() {
-    var sel = profileSel.selectedOptions[0];
-    profileDesc.textContent = sel ? (sel.dataset.descricao || '') : '';
-  }
-  profileSel.addEventListener('change', updateProfileDesc);
-
-  // ── Templates ─────────────────────────────────────────────
-  async function loadTemplates() {
-    try {
-      const res = await fetch('/api/templates');
-      if (!res.ok) throw new Error('Falha ao carregar templates.');
-      const data = await res.json();
-
-      var entries = Object.entries(data);
-      if (!entries.length) {
-        templatesList.innerHTML = '<p style="color:var(--gray-500);font-size:.875rem">Nenhum template encontrado.</p>';
-        templatesLoaded = true;
-        return;
-      }
-
-      var html = '<div class="templates-grid">';
-      entries.forEach(function (entry) {
-        var tipo = entry[0];
-        var versions = entry[1];
-        html += '<div class="template-group">'
-          + '<div class="template-group-header">' + escHtml(tipo) + '</div>'
-          + '<div class="template-group-body">'
-          + versions.map(function (v) { return '<div class="template-version">' + escHtml(v) + '</div>'; }).join('')
-          + '</div></div>';
-      });
-      html += '</div>';
-
-      templatesList.innerHTML = html;
-      templatesLoaded = true;
-
-    } catch (err) {
-      templatesList.innerHTML = '<p style="color:var(--danger);font-size:.875rem">' + escHtml(err.message) + '</p>';
-    }
-  }
-
-  // ── Mock toggle ───────────────────────────────────────────
-  mockCheck.addEventListener('change', function () {
-    toggleRow.classList.toggle('inactive', !mockCheck.checked);
-  });
-
-  // ── Drag & drop ───────────────────────────────────────────
-  dropZone.addEventListener('dragover', function (e) {
-    e.preventDefault();
-    dropZone.classList.add('drag-over');
-  });
-  dropZone.addEventListener('dragleave', function () {
-    dropZone.classList.remove('drag-over');
-  });
-  dropZone.addEventListener('drop', function (e) {
-    e.preventDefault();
-    dropZone.classList.remove('drag-over');
-    if (e.dataTransfer.files.length) setFile(e.dataTransfer.files[0]);
-  });
-  fileInput.addEventListener('change', function () {
-    if (fileInput.files.length) setFile(fileInput.files[0]);
-  });
-
-  function formatBytes(bytes) {
-    if (bytes < 1024) return bytes + ' B';
-    if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
-    return (bytes / 1048576).toFixed(1) + ' MB';
-  }
-  function setFile(file) {
-    fileInfoName.textContent = file.name;
-    fileInfoSize.textContent = formatBytes(file.size);
-    fileInfo.hidden = false;
-    dropZone.style.display = 'none';
-    clearError();
-  }
-  clearFile.addEventListener('click', function () {
-    fileInput.value = '';
-    fileInfo.hidden = true;
-    dropZone.style.display = '';
-  });
-
-  // ── UI helpers ────────────────────────────────────────────
-  function showError(msg) { errorMsg.textContent = msg; errorBox.hidden = false; }
-  function clearError()   { errorBox.hidden = true; errorMsg.textContent = ''; }
-
-  function setLoading(loading) {
-    spinner.hidden = !loading;
-    submitBtn.disabled = loading;
-    submitBtn.innerHTML = loading
-      ? '<div class="spinner-ring" style="width:18px;height:18px;border-width:2px;flex-shrink:0"></div> Convertendo…'
-      : '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:18px;height:18px"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" /></svg> Converter documento';
-  }
-
-  // ── Blob cleanup ──────────────────────────────────────────
-  var previousBlobUrl = null;
-  function cleanupPreviousBlob() {
-    if (previousBlobUrl) { URL.revokeObjectURL(previousBlobUrl); previousBlobUrl = null; }
-  }
-
-  // ── "Nova conversão" ──────────────────────────────────────
-  btnNew.addEventListener('click', function () {
-    resultSec.hidden = true;
-    document.getElementById('form-section').hidden = false;
-    fileInput.value = '';
-    fileInfo.hidden = true;
-    dropZone.style.display = '';
-    cleanupPreviousBlob();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  });
-
-  // ── Submit ────────────────────────────────────────────────
-  form.addEventListener('submit', async function (e) {
-    e.preventDefault();
-    clearError();
-    resultSec.hidden = true;
-    cleanupPreviousBlob();
-
-    const file = fileInput.files[0];
-    if (!file) { showError('Selecione um arquivo .docx.'); return; }
-
-    const fd = new FormData();
-    fd.append('file', file);
-    fd.append('profile', profileSel.value);
-    fd.append('mock', mockCheck.checked ? 'true' : 'false');
-
-    setLoading(true);
-    document.getElementById('form-section').hidden = true;
-
-    try {
-      const res = await fetch('/api/convert', { method: 'POST', body: fd });
-      if (!res.ok) {
-        let detail = 'Erro ' + res.status;
-        try { const b = await res.json(); detail = b.detail || detail; } catch (_) {}
-        throw new Error(detail);
-      }
-
-      const blob    = await res.blob();
-      const blobUrl = URL.createObjectURL(blob);
-      previousBlobUrl = blobUrl;
-
-      const stem      = file.name.replace(/\.docx$/i, '');
-      dlLink.href     = blobUrl;
-      dlLink.download = stem + '.html';
-      iframe.src      = blobUrl;
-
-      resultSec.hidden = false;
-      resultSec.scrollIntoView({ behavior: 'smooth' });
-
-    } catch (err) {
-      document.getElementById('form-section').hidden = false;
-      showError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  });
-
-  // ── Escape HTML helper ────────────────────────────────────
-  function escHtml(str) {
-    return String(str)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
-  }
-
-  // ── Init ──────────────────────────────────────────────────
-  loadProfiles();
-
-})();
-</script>
-
-</body>
+    <script src="/web/assets/js/script.js"></script>
+  </body>
 </html>
