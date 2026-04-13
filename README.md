@@ -179,6 +179,8 @@ uvicorn api:app --reload --port 8000
 
 - [ ] Rodar LLM localmente (sem API Claude)
 
+- [ ] Separar por tópico(<topico></topico>)
+
 - [ ] Dar no prompt a informação que o usuário pode digitar os nomes dos componentes de forma incorreta
       e por isso o modelo pode encontrar nomes de componentes errados, faltando ou sobrando letras.
 
