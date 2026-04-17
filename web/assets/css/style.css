@@ -1385,7 +1385,7 @@ body.sidebar-collapsed .app-main {
   font-size: 0.6875rem;
   font-weight: 600;
   color: var(--gray-500);
-  background: var(--gray-100);
+  background: var(--gray-200);
   border: 1px solid var(--gray-200);
   border-radius: 5px;
   padding: 1px 7px;
