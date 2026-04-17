@@ -145,3 +145,9 @@ When implementing MyBuilder, keep these constraints in mind:
 - The profile JSON is the contract between both tools — MyBuilder writes it, Construtor reads it
 - Component versioning (`m1v1`, `m1v2`, …) maps directly to `templates/<tipo>/<model><version>.html`
 - CSS/JS build output paths must match what the profile JSON references under `css` and `js`
+
+## CSS gotchas
+
+- `.info-card` e `.info-card-title` já existem na view "Sobre" — novos componentes devem usar prefixo próprio (ex: `.infog-*`) para evitar colisão
+- `transform: scale()` não remove elemento do fluxo de layout; iframes escalados precisam de `position: absolute` dentro de container com `overflow: hidden` para evitar scrollbar horizontal
+- `appendChild` em elemento já presente no DOM o move para o fim — útil para reordenação sem re-render

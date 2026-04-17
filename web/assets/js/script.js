@@ -54,6 +54,13 @@
   const gallerySubtitle = document.getElementById("gallery-subtitle");
   const galleryProfileSelect = document.getElementById("gallery-profile-select");
 
+  const infograficosGrid    = document.getElementById("infograficos-grid");
+  const infograficosLoading = document.getElementById("infograficos-loading");
+  const infograficosSubtitle = document.getElementById("infograficos-subtitle");
+  const infograficosSearch  = document.getElementById("infograficos-search");
+  const infograficosNoResults = document.getElementById("infograficos-no-results");
+  const infograficosSearchTerm = document.getElementById("infograficos-search-term");
+
   // ── Sidebar toggle ────────────────────────────────────────
   const isMobile = () => window.innerWidth <= 768;
 
@@ -74,6 +81,10 @@
   var templatesLoaded = false;
   var galleryLoaded = false;
   var galleryCurrentProfile = null;
+
+  var infograficosLoaded = false;
+  var infograficosCurrentMode = {};
+  var INFOGRAFICOS_LIST = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28];
 
   navItems.forEach(function (btn) {
     btn.addEventListener("click", function () {
@@ -96,6 +107,7 @@
       if (viewId === "view-profiles" && !profilesLoaded) loadProfiles();
       if (viewId === "view-templates" && !templatesLoaded) loadTemplates();
       if (viewId === "view-gallery" && !galleryLoaded) loadGallery();
+      if (viewId === "view-infograficos" && !infograficosLoaded) loadInfograficos();
 
       // Close mobile sidebar
       if (isMobile()) document.body.classList.remove("sidebar-open");
@@ -584,7 +596,7 @@
       (assets.css_bootstrap ? '<link rel="stylesheet" href="' + escHtml(assets.css_bootstrap) + '">' : "") +
       (assets.css ? '<link rel="stylesheet" href="' + escHtml(assets.css) + '">' : "") +
       "<style>body{margin:0;padding:12px;box-sizing:border-box;}*{box-sizing:border-box;}</style>" +
-      "</head><body>";
+      "</head><body data-bs-theme='light'>";
 
     var srcdocScripts =
       (assets.j_query ? '<script src="' + escHtml(assets.j_query) + '"><\/script>' : "") +
@@ -639,6 +651,148 @@
     galleryLoaded = false;
     loadGallery(galleryProfileSelect.value);
   });
+
+  // ── Infográficos ──────────────────────────────────────────
+  function loadInfograficos() {
+    infograficosLoading.hidden = false;
+    infograficosGrid.innerHTML = "";
+
+    INFOGRAFICOS_LIST.forEach(function (n) {
+      infograficosCurrentMode[n] = "desk";
+      infograficosGrid.appendChild(createInfograficoCard(n));
+    });
+
+    var count = INFOGRAFICOS_LIST.length;
+    infograficosSubtitle.textContent =
+      count + " infográfico" + (count !== 1 ? "s" : "") + " disponíve" + (count !== 1 ? "is" : "l");
+
+    INFOGRAFICOS_LIST.forEach(function (n, i) {
+      setTimeout(function () { loadInfograficoIframe(n); }, i * 150);
+    });
+
+    infograficosLoaded = true;
+    infograficosLoading.hidden = true;
+
+    setupInfograficosSearch();
+  }
+
+  function createInfograficoCard(numero) {
+    var col = document.createElement("div");
+    col.className = "infog-col";
+    col.dataset.infografico = numero;
+
+    col.innerHTML =
+      '<div class="infog-card">' +
+        '<div class="infog-card-header">' +
+          '<div class="infog-card-num">#' + numero + '</div>' +
+          '<div class="infog-card-actions">' +
+            '<button class="infog-copy-btn" ' +
+              'onclick="infograficosCopy(\'infografico' + numero + '\',this)">Copiar ID</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="infog-preview-container" id="info-preview-' + numero + '">' +
+          '<div class="infog-spinner">' +
+            '<div class="spinner-ring" style="width:20px;height:20px;border-width:2px"></div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="infog-card-footer">' +
+          '<code class="infog-code">data-infografico="infografico' + numero + '"</code>' +
+        '</div>' +
+      '</div>';
+
+    return col;
+  }
+
+  function loadInfograficoIframe(numero) {
+    var mode = infograficosCurrentMode[numero] || "desk";
+    var container = document.getElementById("info-preview-" + numero);
+    if (!container) return;
+
+    var iframe = document.createElement("iframe");
+    iframe.src = "/web/infograficos/preview.html?id=infografico" + numero + "&mode=" + mode;
+    iframe.title = "Infográfico " + numero + " — " + mode;
+    iframe.loading = "lazy";
+    iframe.setAttribute("scrolling", "no");
+    iframe.setAttribute("frameborder", "0");
+
+    container.innerHTML = "";
+    container.appendChild(iframe);
+  }
+
+  function setupInfograficosSearch() {
+    if (!infograficosSearch) return;
+    infograficosSearch.addEventListener("input", function (e) {
+      var q = e.target.value.toLowerCase().replace(/\s/g, "");
+      var visible = 0;
+
+      INFOGRAFICOS_LIST.forEach(function (n) {
+        var col = infograficosGrid.querySelector('[data-infografico="' + n + '"]');
+        if (!col) return;
+        var matches = !q || ("infografico" + n).includes(q) || n.toString().includes(q);
+        col.style.display = matches ? "" : "none";
+        if (matches) visible++;
+      });
+
+      if (infograficosNoResults) {
+        infograficosNoResults.hidden = visible > 0;
+        if (infograficosSearchTerm) infograficosSearchTerm.textContent = q;
+      }
+    });
+  }
+
+  window.addEventListener("message", function (e) {
+    var data = e.data || {};
+    if (data.type === "infopack-loaded") {
+      var match = (data.id || "").match(/\d+$/);
+      if (!match) return;
+      var numero = match[0];
+      var container = document.getElementById("info-preview-" + numero);
+      var iframe = container && container.querySelector("iframe");
+      if (!iframe || !container) return;
+      var containerWidth = container.offsetWidth || container.parentElement.offsetWidth || 400;
+      if (!data.width || data.width <= 0) return;
+      var scale = containerWidth / data.width;
+      iframe.style.width  = data.width  + "px";
+      iframe.style.height = data.height + "px";
+      iframe.style.transform = "scale(" + scale + ")";
+      container.style.height = Math.round(data.height * scale) + "px";
+    }
+    if (data.type === "infopack-error") {
+      var match = (data.id || "").match(/\d+$/);
+      if (!match) return;
+      var col = infograficosGrid && infograficosGrid.querySelector('[data-infografico="' + match[0] + '"]');
+      if (col) {
+        var container = col.querySelector(".infog-preview-container");
+        if (container) {
+          container.innerHTML =
+            '<p style="color:var(--gray-400);font-size:.75rem;padding:1rem;text-align:center">' +
+            '⚠️ Não foi possível carregar este infográfico</p>';
+        }
+        infograficosGrid.appendChild(col);
+      }
+    }
+  });
+
+  window.infograficosToggleMode = function (numero, mode, btn) {
+    infograficosCurrentMode[numero] = mode;
+    var card = btn.closest(".infog-card");
+    card.querySelectorAll(".infog-mode-btn").forEach(function (b) {
+      b.classList.toggle("active", b.dataset.mode === mode);
+    });
+    loadInfograficoIframe(numero);
+  };
+
+  window.infograficosCopy = function (id, btn) {
+    navigator.clipboard.writeText(id).then(function () {
+      var orig = btn.textContent;
+      btn.textContent = "✓ Copiado!";
+      btn.classList.add("copied");
+      setTimeout(function () {
+        btn.textContent = orig;
+        btn.classList.remove("copied");
+      }, 2000);
+    });
+  };
 
   // ── Init ──────────────────────────────────────────────────
   loadProfiles();
