@@ -762,7 +762,7 @@ def build_html_page(
     <title>{titulo}</title>
     {css_tags}
 </head>
-<body data-bs-theme="{profile.get("theme", 'light')}">
+<body>
     <div class="conteudo-aula {profile.get("encapsulation-class", '')}">
         {conteudo}
     </div>

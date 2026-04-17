@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+  </head>
+  <body>
+    <div id="infopack-root"></div>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/web/infograficos/infopack.js"></script>
+    <script>
+      const params = new URLSearchParams(location.search);
+      const id   = params.get("id");
+      const mode = params.get("mode");
+      if (id) {
+        const el = document.getElementById("infopack-root");
+        el.setAttribute("data-infografico", id);
+        if (mode) el.setAttribute("data-mode", mode);
+        const observer = new MutationObserver(() => {
+          const wrapper = document.querySelector(".infopack-wrapper");
+          if (!wrapper) return;
+          observer.disconnect();
+          requestAnimationFrame(() => {
+            window.parent.postMessage({
+              type: "infopack-loaded", id,
+              width: wrapper.scrollWidth,
+              height: wrapper.scrollHeight,
+            }, "*");
+          });
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+        infopack.init();
+      }
+    </script>
+  </body>
+</html>

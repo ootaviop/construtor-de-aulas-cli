@@ -145,3 +145,64 @@ When implementing MyBuilder, keep these constraints in mind:
 - The profile JSON is the contract between both tools — MyBuilder writes it, Construtor reads it
 - Component versioning (`m1v1`, `m1v2`, …) maps directly to `templates/<tipo>/<model><version>.html`
 - CSS/JS build output paths must match what the profile JSON references under `css` and `js`
+
+## Extensão de Navegador — Construtor de Tags
+
+Extensão Chrome (Manifest V3) localizada em `construtor-tags-extension/`. Funciona como painel lateral nativo (`chrome.sidePanel`) — fica aberto ao lado do Google Docs enquanto o autor trabalha.
+
+### Arquivos
+
+| Arquivo | Responsabilidade |
+|---|---|
+| `manifest.json` | Configuração MV3; permissões `sidePanel` e `clipboardWrite` |
+| `background.js` | Service worker; abre o painel ao clicar no ícone da extensão |
+| `sidepanel.html` | Estrutura: header fixo com busca + área de tags |
+| `sidepanel.css` | Visual no estilo do projeto (amber #f59e0b, escala de cinzas) |
+| `sidepanel.js` | Dados das tags + render dinâmico + lógica de cópia |
+
+### Como instalar (desenvolvimento)
+
+1. Abrir `chrome://extensions`
+2. Ativar **Modo do desenvolvedor**
+3. Clicar em **Carregar sem compactação** → selecionar a pasta `construtor-tags-extension/`
+
+### Funcionalidades implementadas
+
+- **15 tags** organizadas em 5 grupos: Estrutura, Texto & Destaque, Mídia, Listas, Interativos
+- **Busca em tempo real** filtra por nome, label ou descrição da tag
+- **Clicar em qualquer parte do card** copia o snippet para a área de transferência
+- Feedback visual de 2s no card (verde + "Copiado!") após cada cópia
+- Navegação por teclado (Enter / Espaço)
+
+### Fluxo de uso
+
+1. Abrir o Google Docs → clicar no ícone da extensão
+2. Buscar ou localizar a tag desejada
+3. Clicar no card → snippet vai para o clipboard
+4. Ctrl+V no documento
+
+### Funcionalidade planejada — Transformar conteúdo via LLM
+
+O autor escreve o conteúdo do jeito que quiser (ex: uma sanfona informal), seleciona, cola na extensão, escolhe o componente alvo, e a extensão reformata para o padrão correto de tags usando um modelo de linguagem.
+
+**Decisão arquitetural:** usar um servidor interno da empresa (não a API do Claude) para:
+- Manter os conteúdos dos materiais dentro da rede da empresa
+- Eliminar custo por token
+- Sem dependência de terceiros
+
+**Stack planejada:**
+- [Ollama](https://ollama.com) rodando em servidor dedicado na rede interna
+- Modelos recomendados: Qwen 2.5 14B (Q4) — boa qualidade, ~10 GB RAM — ou Llama 3.1 8B para hardware mais modesto
+- Hardware mínimo recomendado: 32 GB RAM; GPU opcional mas melhora muito a latência
+- A extensão recebe a URL do servidor nas configurações (ex: `http://192.168.1.50:11434`) — sem API key
+
+**Fluxo planejado:**
+```
+Google Docs → Ctrl+C → cola na extensão → escolhe "Sanfona" → Transformar → LLM interno → resultado → Ctrl+V no Doc
+```
+
+## CSS gotchas
+
+- `.info-card` e `.info-card-title` já existem na view "Sobre" — novos componentes devem usar prefixo próprio (ex: `.infog-*`) para evitar colisão
+- `transform: scale()` não remove elemento do fluxo de layout; iframes escalados precisam de `position: absolute` dentro de container com `overflow: hidden` para evitar scrollbar horizontal
+- `appendChild` em elemento já presente no DOM o move para o fim — útil para reordenação sem re-render
