@@ -245,18 +245,24 @@ O sistema renderizará os componentes internos automaticamente na ordem em que a
 ## Estrutura
 
 ```
-construtor/
-├── construtor_cli.py      # Pipeline principal
-├── api.py                 # Servidor FastAPI (web + endpoints)
-├── web/index.html         # Interface web
-├── profiles/*.json        # Configurações por curso
-├── templates/*/*.html     # Templates Jinja2
+construtor-de-aulas-cli/
+├── construtor_cli.py           # Pipeline principal
+├── api.py                      # Servidor FastAPI (web + endpoints)
+├── web/
+│   ├── index.html              # Interface web (SPA)
+│   └── assets/css/js/          # Estilos e scripts da interface
+├── profiles/*.json             # Configurações por curso/projeto
+├── templates/*/*.html          # Templates Jinja2 por componente
+├── construtor-tags-extension/  # Extensão Chrome para inserção de tags
+│   ├── manifest.json
+│   ├── background.js
+│   ├── sidepanel.html/css/js
 ├── Dockerfile
 ├── docker-compose.yml
-├── .env                   # Chave de API (não commitado)
-├── examples/              # Arquivos de exemplo
-├── tests/                 # Scripts de teste
-└── tools/                 # Utilitários (gerar_template.py)
+├── .env                        # Chave de API (não commitado)
+├── examples/                   # Arquivos de exemplo
+├── tests/                      # Scripts de teste
+└── tools/                      # Utilitários (gerar_template.py)
 ```
 
 ---
@@ -289,48 +295,38 @@ pip install -r requirements.txt
 uvicorn api:app --reload --port 8000
 ```
 
+---
+
 # Roadmap
 
 ## Em andamento
 
-- [ ] Finalizar todos os componentes do Ser Docente (templates + registro no profile)
-- [ ] Melhorar UI/UX da navegação entre tópicos após conversão
 
-## Próximas modificações
+- [ ] Associar no `default.json` todos os componentes do Ser Docente
 
-- [ ] Construir menu de opções na interface (listar profiles, criar aula)
-- [ ] Rodar LLM localmente (sem API Claude)
-- [x] Separar por tópico (`<topico></topico>`)
-- [x] Prompt instrui IA a corrigir tags digitadas incorretamente
+## Concluído
+
+- [x] Separação por tópico (`<topico></topico>`)
+- [x] Prompt instrui a IA a corrigir tags digitadas incorretamente
+- [x] Loading screen com mensagens rotativas durante a conversão
+- [x] Confetti de celebração ao final da conversão
+- [x] Finalizar todos os componentes do Ser Docente (templates + registro no profile)
+- [x] Galeria interativa de componentes por profile
+- [x] Download de tópico individual e download completo em `.zip`
+- [x] **Extensão de navegador** — painel lateral Chrome com snippets de todas as tags; clicar em qualquer parte do card copia o snippet para a área de transferência (ver `construtor-tags-extension/`)
+
+## Planejado
+
+- [ ] **Transformação de conteúdo via LLM local** — o autor cola conteúdo informal na extensão, escolhe o componente alvo (ex: Sanfona) e a extensão reformata para o padrão correto de tags. Será servido por um servidor interno da empresa (Ollama + Qwen/Llama), sem depender de API externa, mantendo os conteúdos dentro da rede da organização.
+- [ ] Suporte a múltiplos projetos com banco de dados
 
 ## MyBuilder (futuro)
 
-Integração de um segundo módulo ao sistema — responsável pela criação da identidade visual e geração dos assets de cada projeto/curso:
+Segundo módulo do sistema, dedicado à criação da identidade visual e geração de assets por projeto/curso:
 
 - **Criação de projeto**: nome, paleta de cores, caminhos de imagens, versão de cada componente
-- **Build de assets**: geração automática da estrutura de pastas e dos bundles CSS/JS buildados
+- **Build de assets**: geração automática da estrutura de pastas e dos bundles CSS/JS
 - **Preview por componente**: visualização da versão escolhida com a paleta do projeto
-- **Download**: backend Python entrega o pacote pronto (estrutura de pastas + arquivos buildados)
-
-O sistema se tornaria multi-página: uma página para **construir aulas** (atual) e outra para **gerar a identidade do projeto** (MyBuilder).
+- **Download**: backend entrega o pacote completo pronto para uso
 
 O arquivo `profiles/*.json` é o contrato entre os dois módulos — o MyBuilder escreve, o Construtor lê.
-
-## Melhorias futuras
-
-- [ ] Extensão no navegador para ajudar com o nome dos componentes (tags no docx)
-- [ ] Suporte a múltiplos projetos com banco de dados
-
-# Doing
-
-## Separação por tag tópico
-
-- [/] Deixar o sistema perfeito para fazer a aula do Ser Docente.
-  - [x] Terminar de importar todos os componentes do Ser Docente como as primeiras versões de
-        cada componente.
-  - [x] Associar no JSON "SERDOCENTE.json" todos os componentes do Ser Docente.
-  - [ ] Associar no JSON "default.json" todos os componentes do Ser Docente.
-
-- [x] Implementar um loading melhor para quando a aula estiver sendo gerada. O
-      texto deve ser mais descritivo. Ou pode ser algo mais lúdico como por exemplo
-      ficar exibindo mensagens criativas enquanto a aula está sendo gerada.

@@ -37,6 +37,7 @@
   const resultSec = document.getElementById("result-section");
   const dlLink = document.getElementById("download-link");
   const dlAllLink = document.getElementById("download-all-link");
+  const copyHtmlBtn = document.getElementById("copy-html-btn");
   const topicoTabs = document.getElementById("topico-tabs");
   const previewHeader = document.getElementById("preview-header");
   const previewTitleText = document.getElementById("preview-title-text");
@@ -76,14 +77,15 @@
     document.body.classList.remove("sidebar-open");
   });
 
-  // ── View navigation ───────────────────────────────────────
-  var profilesLoaded = false;
-  var templatesLoaded = false;
-  var galleryLoaded = false;
-  var galleryCurrentProfile = null;
+  // ── App state ─────────────────────────────────────────────
+  var state = {
+    views:       { profiles: false, templates: false, gallery: false, infograficos: false },
+    gallery:     { loaded: false, profile: null },
+    converter:   { topicos: [], stem: "", index: 0 },
+    infograficos:{ modes: {} },
+  };
 
-  var infograficosLoaded = false;
-  var infograficosCurrentMode = {};
+  // ── View navigation ───────────────────────────────────────
   var INFOGRAFICOS_LIST = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28];
 
   navItems.forEach(function (btn) {
@@ -104,10 +106,10 @@
       });
 
       // Lazy-load data views
-      if (viewId === "view-profiles" && !profilesLoaded) loadProfiles();
-      if (viewId === "view-templates" && !templatesLoaded) loadTemplates();
-      if (viewId === "view-gallery" && !galleryLoaded) loadGallery();
-      if (viewId === "view-infograficos" && !infograficosLoaded) loadInfograficos();
+      if (viewId === "view-profiles" && !state.views.profiles) loadProfiles();
+      if (viewId === "view-templates" && !state.views.templates) loadTemplates();
+      if (viewId === "view-gallery" && !state.gallery.loaded) loadGallery();
+      if (viewId === "view-infograficos" && !state.views.infograficos) loadInfograficos();
 
       // Close mobile sidebar
       if (isMobile()) document.body.classList.remove("sidebar-open");
@@ -137,7 +139,7 @@
       if (!profiles.length) {
         profilesList.innerHTML =
           '<p style="color:var(--gray-500);font-size:.875rem;padding:1rem 0">Nenhum profile encontrado.</p>';
-        profilesLoaded = true;
+        state.views.profiles = true;
         return;
       }
 
@@ -185,14 +187,25 @@
               compRows +
               "</tbody></table>"
             : "") +
-          "</div></div>";
+          "</div>" +
+          '<div class="profile-card-footer">' +
+          '<button class="btn-demo-profile" data-profile="' + escHtml(p.name) + '">Ver demonstração</button>' +
+          "</div>" +
+          "</div>";
       });
 
       profilesList.innerHTML =
         '<div style="display:flex;flex-direction:column;gap:1rem">' +
         html +
         "</div>";
-      profilesLoaded = true;
+
+      profilesList.addEventListener("click", function (e) {
+        var btn = e.target.closest(".btn-demo-profile");
+        if (!btn) return;
+        navigateToGallery(btn.dataset.profile);
+      });
+
+      state.views.profiles = true;
     } catch (err) {
       profilesList.innerHTML =
         '<p style="color:var(--danger);font-size:.875rem;padding:1rem 0">' +
@@ -218,7 +231,7 @@
       if (!entries.length) {
         templatesList.innerHTML =
           '<p style="color:var(--gray-500);font-size:.875rem">Nenhum template encontrado.</p>';
-        templatesLoaded = true;
+        state.views.templates = true;
         return;
       }
 
@@ -244,7 +257,7 @@
       html += "</div>";
 
       templatesList.innerHTML = html;
-      templatesLoaded = true;
+      state.views.templates = true;
     } catch (err) {
       templatesList.innerHTML =
         '<p style="color:var(--danger);font-size:.875rem">' +
@@ -356,15 +369,10 @@
   }
 
   // ── Tópico tabs ───────────────────────────────────────────
-  var currentTopicos = [];
-  var currentStem = "";
-
-  var currentTopicoIndex = 0;
-
   function selectTopico(index) {
-    var topico = currentTopicos[index];
+    var topico = state.converter.topicos[index];
     if (!topico) return;
-    currentTopicoIndex = index;
+    state.converter.index = index;
 
     // Smooth loading transition on iframe
     iframe.classList.add("is-loading");
@@ -377,7 +385,7 @@
       .toLowerCase()
       .replace(/\s+/g, "-")
       .replace(/[^a-z0-9\-]/g, "");
-    dlLink.download = currentStem + "-" + safeName + ".html";
+    dlLink.download = state.converter.stem + "-" + safeName + ".html";
 
     // Update active tab
     var tabs = topicoTabs.querySelectorAll(".topico-tab");
@@ -389,14 +397,14 @@
     // Update preview header
     var titulo = topico.titulo || "Tópico " + (index + 1);
     previewTitleText.textContent = titulo;
-    previewNavPos.textContent = (index + 1) + " / " + currentTopicos.length;
+    previewNavPos.textContent = (index + 1) + " / " + state.converter.topicos.length;
     previewPrev.disabled = index === 0;
-    previewNext.disabled = index === currentTopicos.length - 1;
+    previewNext.disabled = index === state.converter.topicos.length - 1;
   }
 
   function renderTopicoTabs(topicos, stem) {
-    currentTopicos = topicos;
-    currentStem = stem;
+    state.converter.topicos = topicos;
+    state.converter.stem = stem;
 
     var multipleTopicos = topicos.length > 1;
     topicoTabs.hidden = !multipleTopicos;
@@ -439,10 +447,10 @@
 
   // ── Preview prev/next navigation ──────────────────────────
   previewPrev.addEventListener("click", function () {
-    if (currentTopicoIndex > 0) selectTopico(currentTopicoIndex - 1);
+    if (state.converter.index > 0) selectTopico(state.converter.index - 1);
   });
   previewNext.addEventListener("click", function () {
-    if (currentTopicoIndex < currentTopicos.length - 1) selectTopico(currentTopicoIndex + 1);
+    if (state.converter.index < state.converter.topicos.length - 1) selectTopico(state.converter.index + 1);
   });
 
   // ── "Nova conversão" ──────────────────────────────────────
@@ -532,18 +540,18 @@
   dlAllLink.addEventListener("click", function (e) {
     e.preventDefault();
     var zip = new JSZip();
-    currentTopicos.forEach(function (t, i) {
+    state.converter.topicos.forEach(function (t, i) {
       var slug = (t.titulo || "topico-" + (i + 1))
         .toLowerCase()
         .replace(/\s+/g, "-")
         .replace(/[^a-z0-9\-]/g, "");
-      zip.file(currentStem + "-" + slug + ".html", t.html);
+      zip.file(state.converter.stem + "-" + slug + ".html", t.html);
     });
     zip.generateAsync({ type: "blob" }).then(function (blob) {
       var url = URL.createObjectURL(blob);
       var a = document.createElement("a");
       a.href = url;
-      a.download = currentStem + ".zip";
+      a.download = state.converter.stem + ".zip";
       a.click();
       URL.revokeObjectURL(url);
     });
@@ -551,13 +559,13 @@
 
   // ── Gallery ───────────────────────────────────────────────
   async function loadGallery(profileName) {
-    var target = profileName || galleryCurrentProfile || profileSel.value;
+    var target = profileName || state.gallery.profile || profileSel.value;
     galleryLoading.hidden = false;
     galleryGrid.innerHTML = "";
 
     try {
       // Populate profile selector on first load
-      if (!galleryLoaded) {
+      if (!state.gallery.loaded) {
         var profRes = await fetch("/api/profiles");
         if (profRes.ok) {
           var profiles = await profRes.json();
@@ -573,8 +581,8 @@
       if (!res.ok) throw new Error("Falha ao carregar galeria.");
       var data = await res.json();
 
-      galleryCurrentProfile = target;
-      galleryLoaded = true;
+      state.gallery.profile = target;
+      state.gallery.loaded = true;
 
       var count = data.components.length;
       gallerySubtitle.textContent = count + " componente" + (count !== 1 ? "s" : "") + " disponíve" + (count !== 1 ? "is" : "l");
@@ -648,7 +656,7 @@
   }
 
   galleryProfileSelect && galleryProfileSelect.addEventListener("change", function () {
-    galleryLoaded = false;
+    state.gallery.loaded = false;
     loadGallery(galleryProfileSelect.value);
   });
 
@@ -658,7 +666,7 @@
     infograficosGrid.innerHTML = "";
 
     INFOGRAFICOS_LIST.forEach(function (n) {
-      infograficosCurrentMode[n] = "desk";
+      state.infograficos.modes[n] = "desk";
       infograficosGrid.appendChild(createInfograficoCard(n));
     });
 
@@ -670,7 +678,7 @@
       setTimeout(function () { loadInfograficoIframe(n); }, i * 150);
     });
 
-    infograficosLoaded = true;
+    state.views.infograficos = true;
     infograficosLoading.hidden = true;
 
     setupInfograficosSearch();
@@ -704,7 +712,7 @@
   }
 
   function loadInfograficoIframe(numero) {
-    var mode = infograficosCurrentMode[numero] || "desk";
+    var mode = state.infograficos.modes[numero] || "desk";
     var container = document.getElementById("info-preview-" + numero);
     if (!container) return;
 
@@ -774,7 +782,7 @@
   });
 
   window.infograficosToggleMode = function (numero, mode, btn) {
-    infograficosCurrentMode[numero] = mode;
+    state.infograficos.modes[numero] = mode;
     var card = btn.closest(".infog-card");
     card.querySelectorAll(".infog-mode-btn").forEach(function (b) {
       b.classList.toggle("active", b.dataset.mode === mode);
@@ -793,6 +801,48 @@
       }, 2000);
     });
   };
+
+  // ── navigateToGallery ─────────────────────────────────────
+  function navigateToGallery(profileName) {
+    navItems.forEach(function (b) {
+      b.classList.remove("is-active");
+      b.removeAttribute("aria-current");
+    });
+    var galleryBtn = document.querySelector('[data-view="gallery"]');
+    if (galleryBtn) {
+      galleryBtn.classList.add("is-active");
+      galleryBtn.setAttribute("aria-current", "page");
+    }
+    document.querySelectorAll(".view").forEach(function (v) {
+      v.hidden = v.id !== "view-gallery";
+    });
+    state.gallery.loaded = false;
+    state.gallery.profile = profileName;
+    loadGallery(profileName);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  // ── Copiar HTML do tópico atual ───────────────────────────
+  function copyCurrentTopicoHtml() {
+    var topico = state.converter.topicos[state.converter.index];
+    if (!topico) return;
+    var parser = new DOMParser();
+    var doc = parser.parseFromString(topico.html, "text/html");
+    var firstDiv = doc.body.firstElementChild;
+    var htmlToCopy = firstDiv ? firstDiv.outerHTML : doc.body.innerHTML;
+    navigator.clipboard.writeText(htmlToCopy).then(function () {
+      var originalHTML = copyHtmlBtn.innerHTML;
+      copyHtmlBtn.textContent = "Copiado!";
+      copyHtmlBtn.disabled = true;
+      setTimeout(function () {
+        copyHtmlBtn.innerHTML = originalHTML;
+        copyHtmlBtn.disabled = false;
+      }, 2000);
+    }).catch(function () {
+      alert("Não foi possível copiar. Tente baixar o arquivo.");
+    });
+  }
+  copyHtmlBtn.addEventListener("click", copyCurrentTopicoHtml);
 
   // ── Init ──────────────────────────────────────────────────
   loadProfiles();
