@@ -87,22 +87,32 @@ Para parar: `Ctrl+C` ou `docker compose down`.
 
 Após subir o servidor, a interface oferece:
 
-### Navegação por abas
+### Navegação por abas (sidebar)
 
 - **Gerar Aula** — converter `.docx` em HTML interativo
 - **Profiles** — visualizar configurações de cada profile (componentes, assets, metadados)
 - **Templates** — galeria de componentes e suas versões disponíveis
+- **Galeria** — visualização interativa de todos os componentes renderizados com dados de exemplo realistas
 - **Sobre** — informações sobre o sistema
 
-### Funcionalidades no conversor
+### Funcionalidades no conversor (Gerar Aula)
 
 - Upload do arquivo `.docx` (drag-and-drop ou clique)
 - Seleção de profile (por curso/projeto)
 - Modo teste sem API Claude (modo mock)
-- Preview do HTML gerado por tópico
+- Loading screen premium com frases rotativas durante a conversão
+- Confetti de celebração ao final da conversão bem-sucedida
+- Preview do HTML gerado por tópico em iframe responsivo
 - **Downloads:**
   - Baixar tópico individual → `{nome}-{titulo}.html`
   - **Baixar completo** → `.zip` contendo um `.html` por tópico, nomeados como `{nome}-{titulo-slug}.html`
+
+### Funcionalidades da Galeria
+
+- Seletor dinâmico de profile para prévia dos componentes
+- Renderização de todos os 15 tipos de componentes suportados com dados de exemplo educacionais
+- Iframes isolados para cada componente com CSS/JS do profile injetado
+- Ajuste automático de altura dos iframes conforme o conteúdo
 
 ---
 

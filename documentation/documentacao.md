@@ -123,13 +123,23 @@ O servidor web é implementado em `api.py` usando **FastAPI** e exposto na porta
 
 ### Interface web
 
-A rota raiz (`GET /`) serve `web/index.html` diretamente. A interface permite:
+A rota raiz (`GET /`) serve `web/index.html` diretamente. A interface oferece uma navegação por sidebar com as seguintes seções:
 
-- Upload de arquivo `.docx` (com drag & drop)
-- Seleção de profile (carregados dinamicamente da API)
-- Ativação do modo teste (sem chamada à Claude API)
-- Preview do HTML gerado em um `<iframe>`
-- Download do arquivo `.html` resultante
+**Seção Principal:**
+- **Gerar Aula** — conversão de `.docx`:
+  - Upload de arquivo `.docx` (com drag & drop)
+  - Seleção de profile (carregados dinamicamente da API)
+  - Ativação do modo teste (sem chamada à Claude API)
+  - Loading screen premium com frases rotativas
+  - Preview do HTML gerado em um `<iframe>` responsivo
+  - Download do arquivo `.html` resultante
+  - Confetti de celebração ao término bem-sucedido
+
+**Seção Configuração:**
+- **Profiles** — visualização das configurações de cada profile
+- **Templates** — galeria de componentes e suas versões disponíveis
+- **Galeria** — visualização interativa de todos os componentes com seletor de profile
+- **Sobre** — informações sobre o sistema
 
 Arquivos estáticos em `web/` são servidos sob o prefixo `/web` via `StaticFiles`.
 
@@ -188,6 +198,84 @@ O header `Content-Disposition: attachment` permite que o frontend use o mesmo bl
 | 400 | Arquivo não é `.docx`, está vazio ou o profile não existe |
 | 422 | Erro de validação no conteúdo do documento |
 | 500 | Erro inesperado no pipeline |
+
+#### `GET /api/gallery/{profile_name}`
+
+Retorna todos os componentes suportados renderizados com dados de exemplo realistas para um profile específico.
+
+**Parâmetros:**
+
+| Parâmetro | Tipo | Descrição |
+|---|---|---|
+| `profile_name` | `string` | Nome do profile (ex: `"default"`, `"SERDOCENTE"`) |
+
+**Resposta (sucesso — 200):**
+
+```json
+{
+  "components": [
+    {
+      "tipo": "topo",
+      "label": "Topo da Aula",
+      "html": "<div class=\"topo-m1v1\" id=\"topo-001\">...</div>"
+    },
+    {
+      "tipo": "citacao",
+      "label": "Citação",
+      "html": "<blockquote class=\"citacao-m1v1\" id=\"citacao-001\">...</blockquote>"
+    },
+    ...
+  ],
+  "assets": {
+    "css": "/projetos/cursos/...",
+    "js": "/projetos/cursos/...",
+    ...
+  }
+}
+```
+
+**Erros:**
+
+| Código | Situação |
+|---|---|
+| 404 | Profile não existe |
+| 500 | Erro na renderização de algum componente |
+
+**Uso no frontend:**
+
+O frontend injetar o HTML de cada componente em um `<iframe>` com `srcdoc` contendo:
+1. Bootstrap CSS (se o profile tiver)
+2. CSS do profile
+3. HTML do componente
+4. jQuery (se necessário)
+5. Bootstrap JS
+6. JS do profile
+
+Isso garante isolamento completo de CSS/JS e renderização idêntica à de uma aula real.
+
+**Dados de Exemplo (Fixtures):**
+
+Os `COMPONENT_FIXTURES` em `api.py` contêm dados realistas para cada componente (temática Ser Docente / Prática Pedagógica):
+
+- `topo` — título de tópico e aula
+- `citacao` — citação de Paulo Freire
+- `atencao` — aviso sobre planejamento pedagógico
+- `carrossel` — 3 slides sobre competências, aprendizagem ativa e avaliação formativa
+- `sanfona` — seções expansíveis sobre planejamento pedagógico
+- `flipcards` — cards sobre metodologias de ensino
+- `listacheck` — checklist de atividades pedagógicas
+- `listanumero` — passos para implementação de estratégia
+- `listaletra` — itens indexados por letra
+- `spanmodal` — termo com explicação em modal inline
+- `modalcard` — grid de cards com conteúdo modal
+- `referencias` — referências bibliográficas
+- `imagem` — placeholder de imagem
+- `videoplayer` — embed Vimeo
+- `podcast` — reprodutor de áudio com metadados
+
+O dicionário `COMPONENT_LABELS` mapeia nomes técnicos para rótulos amigáveis em português exibidos na interface.
+
+---
 
 **Chave de API:**
 

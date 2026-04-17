@@ -494,6 +494,12 @@
       document.getElementById("form-section").hidden = true;
       resultSec.hidden = false;
       resultSec.scrollIntoView({ behavior: "smooth" });
+      confetti({
+        particleCount: 120,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ["#6366f1", "#818cf8", "#a5b4fc", "#ffffff"],
+      });
     } catch (err) {
       showError(err.message);
     } finally {
