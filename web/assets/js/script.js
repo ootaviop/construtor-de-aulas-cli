@@ -37,6 +37,7 @@
   const resultSec = document.getElementById("result-section");
   const dlLink = document.getElementById("download-link");
   const dlAllLink = document.getElementById("download-all-link");
+  const copyHtmlBtn = document.getElementById("copy-html-btn");
   const topicoTabs = document.getElementById("topico-tabs");
   const previewHeader = document.getElementById("preview-header");
   const previewTitleText = document.getElementById("preview-title-text");
@@ -185,13 +186,24 @@
               compRows +
               "</tbody></table>"
             : "") +
-          "</div></div>";
+          "</div>" +
+          '<div class="profile-card-footer">' +
+          '<button class="btn-demo-profile" data-profile="' + escHtml(p.name) + '">Ver demonstração</button>' +
+          "</div>" +
+          "</div>";
       });
 
       profilesList.innerHTML =
         '<div style="display:flex;flex-direction:column;gap:1rem">' +
         html +
         "</div>";
+
+      profilesList.addEventListener("click", function (e) {
+        var btn = e.target.closest(".btn-demo-profile");
+        if (!btn) return;
+        navigateToGallery(btn.dataset.profile);
+      });
+
       profilesLoaded = true;
     } catch (err) {
       profilesList.innerHTML =
@@ -793,6 +805,48 @@
       }, 2000);
     });
   };
+
+  // ── navigateToGallery ─────────────────────────────────────
+  function navigateToGallery(profileName) {
+    navItems.forEach(function (b) {
+      b.classList.remove("is-active");
+      b.removeAttribute("aria-current");
+    });
+    var galleryBtn = document.querySelector('[data-view="gallery"]');
+    if (galleryBtn) {
+      galleryBtn.classList.add("is-active");
+      galleryBtn.setAttribute("aria-current", "page");
+    }
+    document.querySelectorAll(".view").forEach(function (v) {
+      v.hidden = v.id !== "view-gallery";
+    });
+    galleryLoaded = false;
+    galleryCurrentProfile = profileName;
+    loadGallery(profileName);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  // ── Copiar HTML do tópico atual ───────────────────────────
+  function copyCurrentTopicoHtml() {
+    var topico = currentTopicos[currentTopicoIndex];
+    if (!topico) return;
+    var parser = new DOMParser();
+    var doc = parser.parseFromString(topico.html, "text/html");
+    var firstDiv = doc.body.firstElementChild;
+    var htmlToCopy = firstDiv ? firstDiv.outerHTML : doc.body.innerHTML;
+    navigator.clipboard.writeText(htmlToCopy).then(function () {
+      var originalHTML = copyHtmlBtn.innerHTML;
+      copyHtmlBtn.textContent = "Copiado!";
+      copyHtmlBtn.disabled = true;
+      setTimeout(function () {
+        copyHtmlBtn.innerHTML = originalHTML;
+        copyHtmlBtn.disabled = false;
+      }, 2000);
+    }).catch(function () {
+      alert("Não foi possível copiar. Tente baixar o arquivo.");
+    });
+  }
+  copyHtmlBtn.addEventListener("click", copyCurrentTopicoHtml);
 
   // ── Init ──────────────────────────────────────────────────
   loadProfiles();
