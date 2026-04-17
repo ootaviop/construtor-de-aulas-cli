@@ -11,7 +11,7 @@ Converte `.docx` com tags customizadas em HTML com componentes interativos.
 ### Iniciar
 
 ```bash
-curl -O https://raw.githubusercontent.com/midiadigital123/construtor-de-aulas-cli/dev/start.sh && bash start.sh
+curl -O https://raw.githubusercontent.com/ootaviop/construtor-de-aulas-cli/dev/start.sh && bash start.sh
 ```
 
 Na primeira execução o script cria o arquivo `.env` e pede para preencher a chave de API. Depois rode novamente:
