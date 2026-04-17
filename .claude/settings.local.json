@@ -8,7 +8,9 @@
       "Bash(pip install:*)",
       "Bash(python tests/test_templates.py)",
       "Bash(python construtor_cli.py examples/aula.docx --mock -v --dry-run)",
-      "Bash(python tests/test_pipeline.py)"
+      "Bash(python tests/test_pipeline.py)",
+      "Bash(mkdir -p '/home/otavio.peres/Development/Construtor Python/construtor-de-aulas-cli/.claude/skills')",
+      "Bash(ln -sf '../../.agents/skills/make-interfaces-feel-better' '/home/otavio.peres/Development/Construtor Python/construtor-de-aulas-cli/.claude/skills/make-interfaces-feel-better')"
     ]
   }
 }

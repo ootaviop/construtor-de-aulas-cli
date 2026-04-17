@@ -1,0 +1,8 @@
+{# Template: listacheck/m1v1.html #} {# Dados esperados: { id: string, items:
+[string] } #}
+
+<ul class="lista-check">
+  {% for item in items %}
+  <li>{{ item }}</li>
+  {% endfor %}
+</ul>

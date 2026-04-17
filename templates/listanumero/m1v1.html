@@ -1,0 +1,12 @@
+{# Template: listanumero/m1v1.html #}
+{# Dados esperados: {
+     id: string,
+     items: [string]
+   }
+#}
+
+<ol class="lista-numero">
+    {% for item in items %}
+    <li>{{ item }}</li>
+    {% endfor %}
+</ol>

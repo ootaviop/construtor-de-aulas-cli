@@ -2,74 +2,146 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## What this project does
-
-Converts `.docx` files with custom educational component tags into HTML pages with interactive components. Pipeline: `.docx` → mammoth (HTML extraction) → Claude API (structured data extraction) → Jinja2 (template rendering) → HTML output.
-
-## Setup
+## Commands
 
 ```bash
+# Install dependencies
 pip install -r requirements.txt
-export ANTHROPIC_API_KEY="sk-..."
-```
 
-## Common commands
+# Run the web server (development)
+uvicorn api:app --reload --port 8001
 
-```bash
-# Basic conversion (uses default profile)
-python construtor_cli.py aula.docx
+# Run via Docker (recommended for production/demo)
+docker compose up
 
-# With specific profile
-python construtor_cli.py aula.docx --profile DP90h -o saida.html
-
-# Mock mode (no Claude API call, uses regex-based extraction)
-python construtor_cli.py aula.docx --mock -v
-
-# Validate profile + templates
-python construtor_cli.py --validate --profile DP90h
-
-# List available profiles
+# CLI usage
+python construtor_cli.py aula.docx --profile default --verbose
+python construtor_cli.py aula.docx --mock               # no API call
 python construtor_cli.py --list-profiles
+python construtor_cli.py aula.docx --validate           # check profile + templates
 
-# Run test scripts
-python tests/test_templates.py    # Tests all Jinja2 templates with mock data
-python tests/test_pipeline.py     # Tests full pipeline using examples/test_input.html
-python tests/test_profiles.py     # Compares rendering across profiles
+# Run tests (these are standalone scripts, not pytest)
+python tests/test_pipeline.py
+python tests/test_profiles.py
+python tests/test_templates.py
 
-# Convert a rendered HTML component into a Jinja2 template
-python tools/gerar_template.py componente.html -o templates/carrossel/m1v2.html
-python tools/gerar_template.py componente.html --preview
+# Debug Claude API responses (shows raw HTML in/out)
+LOG_LEVEL=DEBUG uvicorn api:app --reload --port 8001
 ```
 
 ## Architecture
 
-### Pipeline (`construtor_cli.py`)
-1. `load_profile()` — reads `profiles/<name>.json` to get component model/version/asset config
-2. `extract_html_from_docx()` — uses mammoth to convert `.docx` to HTML, then unescapes shortcode tags wrapped in `<p>` tags
-3. `extract_with_claude()` / `extract_mock()` — parses component tags into structured JSON; Claude API returns the full structured payload, mock uses regex
-4. `render_component()` — renders `templates/<tipo>/<model><version>.html` via Jinja2; falls back to `m1v1.html` if the specified version doesn't exist
-5. `build_html_page()` — assembles final HTML with CSS/JS assets from the profile config
+**Pipeline**: `.docx → mammoth → HTML → Claude API (or mock) → JSON → Jinja2 templates → HTML output`
+
+The two main entry points are:
+
+- `construtor_cli.py` — CLI and the entire pipeline logic
+- `api.py` — FastAPI server that wraps the CLI pipeline and serves `web/index.html`
+
+### Key pipeline stages in `construtor_cli.py`
+
+1. **`extract_html_from_docx`** — mammoth converts `.docx` to raw HTML; shortcode wrappers (`<p>&lt;tag&gt;</p>`) are cleaned and HTML entities decoded. All links are automatically decorated with `class="acesse-aqui"` and `target="_blank"`.
+2. **`split_topicos`** — splits the raw HTML at `<topico>` tags. Each tópico may have a `<topicotitulo>` child for its label. Returns a list of `{titulo, html, index}`.
+3. **`extract_with_claude` / `extract_mock`** — sends the per-tópico HTML to Claude (`claude-sonnet-4-20250514`) or the regex mock. Both return `{"itens": [...]}` where each item is either `{tipo: "texto", html}` or `{tipo, id, dados}`. **IMPORTANT: The extraction prompt (Rule 6) now supports nested components — any component can contain other components and paragraphs. The `conteudo` or `dados` fields preserve inner component tags as-is, and the rendering layer recursively renders them.**
+4. **`_render_html_fragment`** — recursively renders nested components found within HTML fragments. Handles inline components (e.g., `spanmodal`) separately from block components. Hoists modal overlays after the main content.
+5. **`render_component`** — resolves the Jinja2 template at `templates/<tipo>/<model><version>.html`. Falls back to `m1v1` if the profile-specified version doesn't exist.
+6. **`build_html_page`** — wraps the ordered list of rendered parts in a full HTML page, injecting CSS/JS from the profile.
 
 ### Profiles (`profiles/*.json`)
-Each profile has a top-level `css` and `js` bundle (loaded for the whole page) plus a `componentes` map that controls which template variant each component uses. Example: `DP90h` uses `carrossel/m1v2.html` while `default` uses `carrossel/m1v1.html`. The bundle approach means a single request loads all CSS/JS needed for all components in that course.
+
+Profiles select which template version to use per component and which CSS/JS bundles to inject. Fields:
+
+- `nome`, `descricao`
+- `css`, `js`, `css-bootstrap`, `js-bootstrap`, `j-query` — asset URLs
+- `encapsulation-class` — CSS class added to the root wrapper `div`
+- `componentes` — maps component name → `{model, version}` (e.g. `"m1"`, `"v1"`)
 
 ### Templates (`templates/<tipo>/<model><version>.html`)
-Jinja2 templates for each component type and version. Template variables follow a per-type schema:
-- `citacao`, `atencao`: `{ id, conteudo }`
-- `carrossel`: `{ id, slides: [{conteudo}] }`
-- `sanfona`: `{ id, secoes: [{cabecalho, corpo}], fonte? }`
-- `flipcards`: `{ id, cards: [{frente, verso, aria_label}] }`
 
-All HTML content in template variables must be rendered with `| safe` (content comes from trusted `.docx` source).
+Jinja2 templates. Each template receives the `dados` dict from the extraction step plus `id`. Template variable shapes are documented in comments at the top of each template file.
 
-### Component tags (used inside `.docx`)
-The `.docx` author wraps content in custom XML-like tags that mammoth passes through:
-`<citacao>`, `<atencao>`, `<carrossel>/<carrosselslide>`, `<sanfona>/<sanfonasecao>/<sanfonasecaocabecalho>/<sanfonasecaocorpo>`, `<flipcards>/<flipcard>/<flipcardfront>/<flipcardback>`
+### Supported components and their tag hierarchy
 
-### Adding a new component version
-1. Create `templates/<tipo>/m1v<N>.html` (use `gerar_template.py` to convert a rendered HTML sample)
-2. Add/update a profile JSON to point `"version": "v<N>"` for that component
-3. Run `python test_templates.py` to validate
+| Component      | Root tag         | Sub-tags / Description                                             |
+| -------------- | ---------------- | ------------------------------------------------------------------ |
+| citacao        | `<citacao>`      | Block quote                                                        |
+| atencao        | `<atencao>`      | Highlight box; **supports nested components**                     |
+| carrossel      | `<carrossel>`    | Slides; sub-tag: `<carrosselslide>`                               |
+| sanfona        | `<sanfona>`      | Accordion; sub-tags: `<sanfonasecao>`, `<sanfonasecaocabecalho>`, `<sanfonasecaocorpo>` |
+| flipcards      | `<flipcards>`    | Flip cards; sub-tags: `<flipcard>`, `<flipcardfront>`, `<flipcardback>` |
+| topo           | `<topo>`         | Lesson header; optional sub-tags: `<titulotopico>`, `<tituloaula>` |
+| videoplayer    | `<videoplayer>`  | Vimeo embed; content is the embed URL                             |
+| listacheck     | `<listacheck>`   | Checkbox list; wraps native `<ul>` from mammoth                   |
+| listanumero    | `<listanumero>`  | Numbered list; wraps native `<ol>` from mammoth                   |
+| listaletra     | `<listaletra>`   | Letter-indexed list; wraps native `<ol>` from mammoth             |
+| podcast        | `<podcast>`      | Audio player + modal; sub-tags: `<podcasturl>`, `<podcastnome>`, `<podcasttema>`, `<podcastsobre>`, `<podcastpdf>` (optional) |
+| spanmodal      | `<spanmodal>`    | Inline trigger + modal; **inline component**; sub-tags: `<spanmodaltrigger>`, `<spanmodalcorpo>` |
+| imagem         | `<imagem>`       | Centered image; content is the alt text (src is `#`, set in post-production) |
+| modalcard      | `<modalcard>`    | Card grid with modals; sub-tag: `<modalcarditem>` containing `<modalcardtitulo>`, `<modalcarddescricao>`, `<modalcardconteudo>` |
+| referencias    | `<referencias>`  | Bibliography modal button; content is the HTML of reference items |
 
-### Adding a new profile
-Create `profiles/<name>.json` following the structure of `default.json`. Run `python construtor_cli.py --validate --profile <name>` to check template availability.
+The Claude prompt (in `EXTRACTION_PROMPT`) intentionally corrects typos in these tag names before extraction. **Component nesting:** Components marked with "supports nested components" can contain other components and paragraphs inside their content fields. The rendering pipeline (`_render_html_fragment`) recursively processes these nested tags.
+
+### Web interface (`web/`)
+
+Single-page app served at `/`. Uses vanilla JS in `web/assets/js/script.js`. The UI features:
+
+- **Sidebar navigation** with three sections:
+  - **Gerar Aula** — main converter view (default)
+  - **Profiles** — lists available profiles with component configuration details
+  - **Templates** — showcases all template directories and their versions
+  - **Sobre** — about/help section
+
+- **Converter view** — accepts `.docx` upload, profile selection, and mock mode toggle
+- **After conversion** — API returns `{stem, topicos, html_completo}`:
+  - Renders a tab/navigation per tópico
+  - Injects each tópico's HTML into a preview iframe
+  - **Download options:**
+    - Single tópico: downloads `{stem}-{titulo}.html`
+    - **"Baixar completo"** — downloads a ZIP file named `{stem}.zip` containing one `.html` per tópico, each named `{stem}-{slug}.html` where `{slug}` is the tópico title sanitized. ZIP generation is client-side using JSZip CDN.
+
+### API endpoints
+
+| Method | Path             | Purpose                                                                       |
+| ------ | ---------------- | ----------------------------------------------------------------------------- |
+| GET    | `/`              | Serves `web/index.html`                                                       |
+| GET    | `/api/profiles`  | Lists profiles with metadata (name, label, description, components config)    |
+| GET    | `/api/templates` | Lists template directories grouped by component type with available versions  |
+| POST   | `/api/convert`   | Converts `.docx` → JSON with `{stem, topicos, html_completo}`                |
+
+**Response shapes:**
+
+- `/api/profiles`: `[{name, label, descricao, css, js, componentes: {tipo: {model, version}}, ...}, ...]`
+- `/api/templates`: `{tipo: ["m1v1", "m1v2", ...], ...}` (grouped by component type)
+- `/api/convert`: `{stem: string, topicos: [{titulo, html, index}, ...], html_completo: string}`
+
+### Environment
+
+- `ANTHROPIC_API_KEY` — required for real conversion (can use `--mock` / `mock=true` without it)
+- `LOG_LEVEL` — set to `DEBUG` to log raw Claude responses
+
+## Planned architecture evolution
+
+The system is currently a single-page app focused on one course (Ser Docente). The planned evolution has two tracks:
+
+### Track 1 — More courses (near term)
+
+Add new profiles (`profiles/<CURSO>.json`) and their component templates. A database may be needed once the number of projects grows beyond a handful of JSON files.
+
+### Track 2 — MyBuilder integration (future)
+
+A second section of the web app (multi-page) dedicated to **project identity and asset generation**. The MyBuilder concept:
+
+- User provides project name, color palette, image paths, and selects a component version per component type
+- Backend generates the full folder structure for the course assets
+- Backend builds CSS and JS bundles (one per project) from per-component source files
+- Built assets are served for download (targeting the user's Downloads folder)
+- Preview of each component version rendered with the chosen palette
+
+This turns the system from a lesson-conversion tool into a full course-asset pipeline: **MyBuilder** (build the design system) → **Construtor de Aulas** (author lessons using that design system).
+
+When implementing MyBuilder, keep these constraints in mind:
+
+- The profile JSON is the contract between both tools — MyBuilder writes it, Construtor reads it
+- Component versioning (`m1v1`, `m1v2`, …) maps directly to `templates/<tipo>/<model><version>.html`
+- CSS/JS build output paths must match what the profile JSON references under `css` and `js`

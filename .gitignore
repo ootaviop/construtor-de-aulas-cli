@@ -22,3 +22,10 @@ todo.md
 
 # Prompts
 prompts/
+
+# IA
+.claude/
+.agents/
+
+# Documentação
+documentation/

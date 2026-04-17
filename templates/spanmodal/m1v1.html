@@ -1,0 +1,25 @@
+{# Template: spanmodal/m1v1.html #}
+{# Dados esperados: {
+     id: string,
+     texto: string,      (texto visível do span clicável e título do modal)
+     conteudo: string,   (HTML do corpo do modal; pode conter múltiplos <p>)
+   }
+#}
+
+<span data-toggle="modal" data-target="#spanmodal-{{ id }}">{{ texto }}</span>
+<div id="spanmodal-{{ id }}" class="modal fade" role="dialog" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">{{ texto }}</h4>
+                <button class="close" type="button" aria-label="Close" data-dismiss="modal"><span aria-hidden="true">×</span></button>
+            </div>
+            <div class="modal-body">
+                {{ conteudo | safe }}
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-light" type="button" data-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
