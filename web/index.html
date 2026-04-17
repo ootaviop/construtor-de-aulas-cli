@@ -130,6 +130,24 @@
                 <span class="nav-label">Templates</span>
               </button>
             </li>
+            <li>
+              <button class="nav-item" data-view="gallery">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.75"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z"
+                  />
+                </svg>
+                <span class="nav-label">Galeria</span>
+              </button>
+            </li>
           </ul>
         </div>
 
@@ -163,7 +181,7 @@
           <!-- ════════════════════════════════════════════════════ -->
           <!-- VIEW: Gerar Aula                                     -->
           <!-- ════════════════════════════════════════════════════ -->
-          <div class="view" id="view-converter">
+          <div class="view" id="view-converter" style="position:relative">
             <!-- Form card -->
             <div class="card" id="form-section">
               <div class="card-header">
@@ -301,15 +319,11 @@
               </div>
             </div>
 
-            <!-- Loading -->
-            <div class="card" id="spinner" hidden>
-              <div class="spinner-body">
-                <div class="spinner-ring"></div>
-                <div>
-                  <p class="spinner-title">Convertendo documento…</p>
-                  <p class="spinner-sub">Isso pode levar alguns segundos</p>
-                </div>
-              </div>
+            <!-- Loading overlay -->
+            <div id="spinner" class="loading-overlay" hidden>
+              <div class="loading-ring"></div>
+              <p id="loading-phrase" class="loading-phrase"></p>
+              <p class="loading-subtext">Isso pode levar alguns segundos…</p>
             </div>
 
             <!-- Error -->
@@ -383,10 +397,51 @@
                         d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"
                       />
                     </svg>
-                    Baixar HTML
+                    Baixar tópico
+                  </a>
+                  <a id="download-all-link" class="btn-download btn-download-all" download hidden>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke-width="2"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"
+                      />
+                    </svg>
+                    Baixar completo
                   </a>
                 </div>
               </div>
+
+              <!-- Tópicos tabs (visível apenas quando há múltiplos tópicos) -->
+              <div id="topico-tabs" class="topico-tabs" hidden></div>
+
+              <!-- Preview header: current topic title + prev/next nav -->
+              <div id="preview-header" class="preview-header" hidden>
+                <div class="preview-title">
+                  <span class="preview-title-dot"></span>
+                  <span id="preview-title-text"></span>
+                </div>
+                <div class="preview-nav">
+                  <button class="preview-nav-btn" id="preview-prev" aria-label="Tópico anterior" title="Anterior">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+                    </svg>
+                  </button>
+                  <span class="preview-nav-pos" id="preview-nav-pos">1 / 1</span>
+                  <button class="preview-nav-btn" id="preview-next" aria-label="Próximo tópico" title="Próximo">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
               <iframe id="preview-frame" title="Preview da aula"></iframe>
             </div>
           </div>
@@ -453,6 +508,30 @@
               </div>
             </div>
           </div>
+
+          <!-- ════════════════════════════════════════════════════ -->
+          <!-- VIEW: Galeria                                        -->
+          <!-- ════════════════════════════════════════════════════ -->
+          <div class="view" id="view-gallery" hidden>
+            <div class="gallery-header">
+              <div>
+                <p class="view-title">Galeria de Componentes</p>
+                <p class="view-subtitle" id="gallery-subtitle">
+                  Todos os componentes renderizados com dados de exemplo
+                </p>
+              </div>
+              <div class="gallery-controls">
+                <label for="gallery-profile-select" class="gallery-profile-label">Perfil:</label>
+                <select id="gallery-profile-select" class="gallery-profile-select"></select>
+              </div>
+            </div>
+            <div id="gallery-loading" class="view-loading" hidden>
+              <div class="spinner-ring" style="width:24px;height:24px;border-width:2px"></div>
+              Carregando componentes…
+            </div>
+            <div id="gallery-grid" class="gallery-grid"></div>
+          </div>
+          <!-- /view-gallery -->
 
           <!-- ════════════════════════════════════════════════════ -->
           <!-- VIEW: Sobre                                          -->
@@ -605,6 +684,7 @@
     </div>
     <!-- /app-layout -->
 
-    <script src="/web/assets/js/script.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="/web/assets/js/script.js?v=3"></script>
   </body>
 </html>

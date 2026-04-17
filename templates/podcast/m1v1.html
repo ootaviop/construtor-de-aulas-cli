@@ -1,0 +1,85 @@
+{# Template: podcast/m1v1.html #}
+{# Dados esperados: {
+     id: string,
+     soundcloud_url: string,   (URL completa do embed SoundCloud, vai em data-url)
+     nome: string,             (nome do palestrante)
+     tema: string,             (tema / subtítulo do podcast)
+     sobre: string,            (texto do modal "Sobre o especialista")
+     pdf_url: string | None,   (link do PDF para download; omite o botão se ausente)
+   }
+#}
+
+<div class="d-center">
+    <div class="podcast-container pod" role="podcast" data-url="{{ soundcloud_url }}">
+        <div class="podcast-header">
+            <div class="podcast-image"><img src="#" alt="{{ nome }}" /></div>
+            <div class="podcast-info">
+                <p class="podcast-specialist" style="padding: 0!important;margin: 0!important;">Especialista</p>
+                <h2 class="podcast-title" style="padding: 0;margin: 0!important;">{{ nome }}</h2>
+                <p class="podcast-subtitle corpo" style="padding-top: 0!important;">{{ tema }}</p>
+                <div class="podcast-actions">
+                    <button class="action-button secondary-button" data-toggle="modal" data-target="#modal-{{ id }}">
+                        <svg class="bi bi-three-dots" xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3"></path>
+                        </svg> Sobre o especialista
+                    </button>
+                    <div id="modal-{{ id }}" class="modal fade" role="dialog" tabindex="-1">
+                        <div class="modal-dialog modal-dialog-centered" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h4 class="modal-title">Sobre o especialista</h4>
+                                    <button class="close" type="button" aria-label="Close" data-dismiss="modal"><span aria-hidden="true">×</span></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p>{{ sobre }}</p>
+                                </div>
+                                <div class="modal-footer"><button class="btn btn-light" type="button" data-dismiss="modal">Fechar</button></div>
+                            </div>
+                        </div>
+                    </div>
+                    {% if pdf_url %}
+                    <a class="action-button secondary-button" role="button" href="{{ pdf_url }}" target="_blank" rel="noopener noreferrer">
+                        <svg class="bi bi-download" xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5"></path>
+                            <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708z"></path>
+                        </svg> Baixar o PDF
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="podcast-controls">
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress"></div>
+                </div>
+                <div class="time-display"><span class="current">00:00</span><span class="duration">0:00</span></div>
+            </div>
+            <div class="playback-controls">
+                <button class="control-button rewind-button">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M13.2242 5.21838L16.4733 2V4.2538C23.4338 4.50053 29 10.1677 29 17.1227C29 24.2346 23.1797 30 16 30C8.82032 30 3 24.2346 3 17.1227H4.38789C4.38789 23.4754 9.58682 28.6252 16 28.6252C22.4132 28.6252 27.6121 23.4754 27.6121 17.1227C27.6121 10.9271 22.667 5.87554 16.4733 5.62959V8.43675L13.2242 5.21838Z" fill="#888888"></path>
+                        <path d="M16.8425 20.2201C15.5795 20.2201 14.676 19.7678 14.1417 18.9883L15.1229 18.1222C15.4727 18.6804 16.075 19.0076 16.862 19.0076C17.6198 19.0076 18.0861 18.536 18.0861 17.9682C18.0861 17.41 17.5906 17.1021 16.862 17.1021C16.3568 17.1021 16.0362 17.2176 15.6767 17.487L14.7829 17.131L15.5504 13.6857H20L19.7377 14.8887H16.6579L16.3276 16.3996C16.6677 16.1301 17.0563 15.9858 17.6198 15.9858C18.669 15.9858 19.5337 16.6402 19.5337 17.8046C19.5337 19.123 18.4455 20.2201 16.8425 20.2201Z" fill="#888888"></path>
+                        <path d="M11.4201 20.1046H12.7997L14.2278 13.6857H13.0231L10.5263 15.7163L11.1384 16.5343L12.4499 15.4468L11.4201 20.1046Z" fill="#888888"></path>
+                    </svg>
+                </button>
+                <div class="control-button play-button">
+                    <svg class="btn-play" width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="34" height="34" rx="17" fill="var(--inter1)"></rect>
+                        <path d="M18.9697 17L16.1816 19.0908V14.9082L18.9697 17Z" fill="var(--color-font-body)" stroke="var(--color-font-body)" stroke-width="4"></path>
+                    </svg>
+                    <svg class="btn-pause" width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="34" height="34" rx="17" fill="var(--inter1)"></rect>
+                        <path d="M17 7C22.5228 7 27 11.4772 27 17C27 22.5228 22.5228 27 17 27C11.4772 27 7 22.5228 7 17C7 11.4772 11.4772 7 17 7ZM17 7.90918C11.9792 7.90918 7.90918 11.9792 7.90918 17C7.90918 22.0208 11.9792 26.0908 17 26.0908C22.0208 26.0908 26.0908 22.0208 26.0908 17C26.0908 11.9792 22.0208 7.90918 17 7.90918ZM15.4092 13.3633C15.7857 13.3633 16.0908 13.6694 16.0908 14.0459V20.1816C16.0908 20.5582 15.7857 20.8632 15.4092 20.8633C15.0326 20.8633 14.7275 20.5582 14.7275 20.1816V14.0459C14.7275 13.6693 15.0326 13.3633 15.4092 13.3633ZM18.5908 13.3633C18.9674 13.3633 19.2725 13.6693 19.2725 14.0459V20.1816C19.2725 20.5582 18.9674 20.8633 18.5908 20.8633C18.2143 20.8632 17.9092 20.5582 17.9092 20.1816V14.0459C17.9092 13.6694 18.2143 13.3633 18.5908 13.3633Z" fill="white"></path>
+                    </svg>
+                </div>
+                <button class="control-button forward-button">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" d="M15.5267 2L18.7758 5.21837L15.5267 8.43675V5.62959C9.33298 5.87554 4.38789 10.9271 4.38789 17.1227C4.38789 23.4754 9.58682 28.6252 16 28.6252C22.4132 28.6252 27.6121 23.4754 27.6121 17.1227H29C29 24.2346 23.1797 30 16 30C8.82027 30 3 24.2346 3 17.1227C3 10.1677 8.56623 4.50053 15.5267 4.2538V2ZM15.3686 13.2002L13.9405 19.6191H12.5609L13.5907 14.9613L12.2792 16.0488L11.6671 15.2308L14.1639 13.2002H15.3686ZM15.2825 18.5028C15.8168 19.2823 16.7203 19.7346 17.9833 19.7346C19.5863 19.7346 20.6744 18.6375 20.6744 17.3191C20.6744 16.1546 19.8098 15.5002 18.7605 15.5002C18.197 15.5002 17.8084 15.6446 17.4684 15.914L17.7987 14.4031H20.8785L21.1408 13.2002H16.6912L15.9237 16.6454L16.8175 17.0015C17.1769 16.732 17.4975 16.6166 18.0027 16.6166C18.7314 16.6166 19.2269 16.9245 19.2269 17.4827C19.2269 18.0505 18.7605 18.522 18.0027 18.522C17.2158 18.522 16.6135 18.1948 16.2637 17.6367L15.2825 18.5028Z" fill="#888888"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="separador-medio"></div>

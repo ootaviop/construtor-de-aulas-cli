@@ -1,0 +1,31 @@
+{# Template: topo/m1v1.html #}
+{# Dados esperados: {
+     id: string,
+     titulo_topico: string | None,
+     titulo_aula: string | None
+   }
+   Se titulo_topico e titulo_aula ausentes, renderiza apenas a imagem.
+#}
+
+<div class="container topo" id="{{ id }}">
+    <div class="row">
+        <div class="col-sm-12 col-md-10 col-lg-10 col-xl-8 m-auto">
+            <div class="separador-medio"></div>
+            <div class="img-topo">
+                <picture>
+                    <source srcset="https://recursos-moodle.caeddigital.net/projetos/cursos/SER-DOCENTE/2025-1/assets/img/topo-aula.png" media="(min-width: 992px)">
+                    <source srcset="https://recursos-moodle.caeddigital.net/projetos/cursos/SER-DOCENTE/2025-1/assets/img/topo-aula.png" media="(min-width: 576px)">
+                    <img class="img-fluid" src="https://recursos-moodle.caeddigital.net/projetos/cursos/SER-DOCENTE/2025-1/assets/img/topo-aula.png">
+                </picture>
+            </div>
+            {% if titulo_topico %}
+            <div class="etiqueta"><span>{{ titulo_topico }}</span></div>
+            {% endif %}
+            {% if titulo_aula %}
+            <div class="titulo">
+                <h1>{{ titulo_aula }}</h1>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>

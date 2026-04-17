@@ -1,6 +1,18 @@
 (function () {
   "use strict";
 
+  // ── Loading phrases ───────────────────────────────────────
+  var LOADING_PHRASES = [
+    "Fazendo o que o estagiário faria em 3 horas…",
+    "Transformando Word em experiência de aprendizagem…",
+    "Relendo o documento com mais atenção do que qualquer aluno jamais leu…",
+    "Atualizando o Notion… brincadeira, isso é melhor que o Notion.",
+    "Convertendo horas de planejamento em segundos…",
+    "Fazendo a IA trabalhar enquanto você finalmente toma aquele café merecido…",
+    "Trabalhando mais rápido do que você digita 'precisa de ajustes'…",
+    "Fazendo em segundos o que levaria uma tarde inteira e dois cafés…",
+  ];
+
   // ── DOM refs ──────────────────────────────────────────────
   const sidebarToggle = document.getElementById("sidebar-toggle");
   const sidebar = document.getElementById("sidebar");
@@ -24,11 +36,23 @@
   const errorMsg = document.getElementById("error-message");
   const resultSec = document.getElementById("result-section");
   const dlLink = document.getElementById("download-link");
+  const dlAllLink = document.getElementById("download-all-link");
+  const topicoTabs = document.getElementById("topico-tabs");
+  const previewHeader = document.getElementById("preview-header");
+  const previewTitleText = document.getElementById("preview-title-text");
+  const previewNavPos = document.getElementById("preview-nav-pos");
+  const previewPrev = document.getElementById("preview-prev");
+  const previewNext = document.getElementById("preview-next");
   const btnNew = document.getElementById("btn-new");
   const iframe = document.getElementById("preview-frame");
 
+  const loadingPhrase = document.getElementById("loading-phrase");
   const profilesList = document.getElementById("profiles-list");
   const templatesList = document.getElementById("templates-list");
+  const galleryGrid = document.getElementById("gallery-grid");
+  const galleryLoading = document.getElementById("gallery-loading");
+  const gallerySubtitle = document.getElementById("gallery-subtitle");
+  const galleryProfileSelect = document.getElementById("gallery-profile-select");
 
   // ── Sidebar toggle ────────────────────────────────────────
   const isMobile = () => window.innerWidth <= 768;
@@ -48,6 +72,8 @@
   // ── View navigation ───────────────────────────────────────
   var profilesLoaded = false;
   var templatesLoaded = false;
+  var galleryLoaded = false;
+  var galleryCurrentProfile = null;
 
   navItems.forEach(function (btn) {
     btn.addEventListener("click", function () {
@@ -69,6 +95,7 @@
       // Lazy-load data views
       if (viewId === "view-profiles" && !profilesLoaded) loadProfiles();
       if (viewId === "view-templates" && !templatesLoaded) loadTemplates();
+      if (viewId === "view-gallery" && !galleryLoaded) loadGallery();
 
       // Close mobile sidebar
       if (isMobile()) document.body.classList.remove("sidebar-open");
@@ -264,22 +291,147 @@
     errorMsg.textContent = "";
   }
 
+  var _phraseInterval = null;
+  var _phraseIndex = 0;
+
+  function startPhraseRotation() {
+    var order = LOADING_PHRASES.slice().sort(function () { return Math.random() - 0.5; });
+    _phraseIndex = 0;
+    loadingPhrase.textContent = order[0];
+    loadingPhrase.classList.remove("fade-out");
+
+    _phraseInterval = setInterval(function () {
+      loadingPhrase.classList.add("fade-out");
+      setTimeout(function () {
+        _phraseIndex = (_phraseIndex + 1) % order.length;
+        if (_phraseIndex === 0) order.sort(function () { return Math.random() - 0.5; });
+        loadingPhrase.textContent = order[_phraseIndex];
+        loadingPhrase.classList.remove("fade-out");
+      }, 370);
+    }, 5600);
+  }
+
+  function stopPhraseRotation() {
+    if (_phraseInterval) {
+      clearInterval(_phraseInterval);
+      _phraseInterval = null;
+    }
+    loadingPhrase.textContent = "";
+  }
+
   function setLoading(loading) {
     spinner.hidden = !loading;
     submitBtn.disabled = loading;
     submitBtn.innerHTML = loading
       ? '<div class="spinner-ring" style="width:18px;height:18px;border-width:2px;flex-shrink:0"></div> Convertendo…'
       : '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:18px;height:18px"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" /></svg> Converter documento';
+    if (loading) startPhraseRotation(); else stopPhraseRotation();
   }
 
-  // ── Blob cleanup ──────────────────────────────────────────
-  var previousBlobUrl = null;
-  function cleanupPreviousBlob() {
-    if (previousBlobUrl) {
-      URL.revokeObjectURL(previousBlobUrl);
-      previousBlobUrl = null;
-    }
+  // ── Blob management ───────────────────────────────────────
+  var blobUrls = [];
+
+  function revokeAllBlobs() {
+    blobUrls.forEach(function (u) { URL.revokeObjectURL(u); });
+    blobUrls = [];
   }
+
+  function createBlobUrl(htmlString) {
+    var blob = new Blob([htmlString], { type: "text/html; charset=utf-8" });
+    var url = URL.createObjectURL(blob);
+    blobUrls.push(url);
+    return url;
+  }
+
+  // ── Tópico tabs ───────────────────────────────────────────
+  var currentTopicos = [];
+  var currentStem = "";
+
+  var currentTopicoIndex = 0;
+
+  function selectTopico(index) {
+    var topico = currentTopicos[index];
+    if (!topico) return;
+    currentTopicoIndex = index;
+
+    // Smooth loading transition on iframe
+    iframe.classList.add("is-loading");
+    iframe.src = topico._blobUrl;
+    iframe.onload = function () { iframe.classList.remove("is-loading"); };
+
+    // Update download-link (tópico atual)
+    dlLink.href = topico._blobUrl;
+    var safeName = (topico.titulo || "topico-" + (index + 1))
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9\-]/g, "");
+    dlLink.download = currentStem + "-" + safeName + ".html";
+
+    // Update active tab
+    var tabs = topicoTabs.querySelectorAll(".topico-tab");
+    tabs.forEach(function (t, i) {
+      t.classList.toggle("is-active", i === index);
+      t.setAttribute("aria-selected", i === index ? "true" : "false");
+    });
+
+    // Update preview header
+    var titulo = topico.titulo || "Tópico " + (index + 1);
+    previewTitleText.textContent = titulo;
+    previewNavPos.textContent = (index + 1) + " / " + currentTopicos.length;
+    previewPrev.disabled = index === 0;
+    previewNext.disabled = index === currentTopicos.length - 1;
+  }
+
+  function renderTopicoTabs(topicos, stem) {
+    currentTopicos = topicos;
+    currentStem = stem;
+
+    var multipleTopicos = topicos.length > 1;
+    topicoTabs.hidden = !multipleTopicos;
+    previewHeader.hidden = !multipleTopicos;
+    dlAllLink.hidden = !multipleTopicos;
+
+    if (!multipleTopicos) {
+      topicoTabs.innerHTML = "";
+      return;
+    }
+
+    var tabsHtml = topicos
+      .map(function (t, i) {
+        return (
+          '<button class="topico-tab' + (i === 0 ? " is-active" : "") + '"' +
+          ' data-index="' + i + '"' +
+          ' role="tab"' +
+          ' aria-selected="' + (i === 0 ? "true" : "false") + '">' +
+          '<span class="topico-tab-num">' + (i + 1) + "</span>" +
+          escHtml(t.titulo || "Tópico " + (i + 1)) +
+          "</button>"
+        );
+      })
+      .join("");
+
+    // Append count badge at the end
+    tabsHtml +=
+      '<div class="topico-tabs-end">' +
+      '<span class="topico-count-badge">' + topicos.length + " tópicos</span>" +
+      "</div>";
+
+    topicoTabs.innerHTML = tabsHtml;
+
+    topicoTabs.querySelectorAll(".topico-tab").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        selectTopico(parseInt(btn.dataset.index, 10));
+      });
+    });
+  }
+
+  // ── Preview prev/next navigation ──────────────────────────
+  previewPrev.addEventListener("click", function () {
+    if (currentTopicoIndex > 0) selectTopico(currentTopicoIndex - 1);
+  });
+  previewNext.addEventListener("click", function () {
+    if (currentTopicoIndex < currentTopicos.length - 1) selectTopico(currentTopicoIndex + 1);
+  });
 
   // ── "Nova conversão" ──────────────────────────────────────
   btnNew.addEventListener("click", function () {
@@ -288,7 +440,11 @@
     fileInput.value = "";
     fileInfo.hidden = true;
     dropZone.style.display = "";
-    cleanupPreviousBlob();
+    revokeAllBlobs();
+    topicoTabs.hidden = true;
+    topicoTabs.innerHTML = "";
+    previewHeader.hidden = true;
+    dlAllLink.hidden = true;
     window.scrollTo({ top: 0, behavior: "smooth" });
   });
 
@@ -297,7 +453,7 @@
     e.preventDefault();
     clearError();
     resultSec.hidden = true;
-    cleanupPreviousBlob();
+    revokeAllBlobs();
 
     const file = fileInput.files[0];
     if (!file) {
@@ -311,7 +467,6 @@
     fd.append("mock", mockCheck.checked ? "true" : "false");
 
     setLoading(true);
-    document.getElementById("form-section").hidden = true;
 
     try {
       const res = await fetch("/api/convert", { method: "POST", body: fd });
@@ -324,19 +479,22 @@
         throw new Error(detail);
       }
 
-      const blob = await res.blob();
-      const blobUrl = URL.createObjectURL(blob);
-      previousBlobUrl = blobUrl;
+      const data = await res.json();
+      const stem = data.stem || file.name.replace(/\.docx$/i, "");
 
-      const stem = file.name.replace(/\.docx$/i, "");
-      dlLink.href = blobUrl;
-      dlLink.download = stem + ".html";
-      iframe.src = blobUrl;
+      // Cria blob URLs para cada tópico
+      data.topicos.forEach(function (t) {
+        t._blobUrl = createBlobUrl(t.html);
+      });
 
+      // Renderiza abas e seleciona o primeiro tópico
+      renderTopicoTabs(data.topicos, stem);
+      selectTopico(0);
+
+      document.getElementById("form-section").hidden = true;
       resultSec.hidden = false;
       resultSec.scrollIntoView({ behavior: "smooth" });
     } catch (err) {
-      document.getElementById("form-section").hidden = false;
       showError(err.message);
     } finally {
       setLoading(false);
@@ -351,6 +509,130 @@
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;");
   }
+
+  // ── ZIP download handler ──────────────────────────────────
+  dlAllLink.addEventListener("click", function (e) {
+    e.preventDefault();
+    var zip = new JSZip();
+    currentTopicos.forEach(function (t, i) {
+      var slug = (t.titulo || "topico-" + (i + 1))
+        .toLowerCase()
+        .replace(/\s+/g, "-")
+        .replace(/[^a-z0-9\-]/g, "");
+      zip.file(currentStem + "-" + slug + ".html", t.html);
+    });
+    zip.generateAsync({ type: "blob" }).then(function (blob) {
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.href = url;
+      a.download = currentStem + ".zip";
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+  });
+
+  // ── Gallery ───────────────────────────────────────────────
+  async function loadGallery(profileName) {
+    var target = profileName || galleryCurrentProfile || profileSel.value;
+    galleryLoading.hidden = false;
+    galleryGrid.innerHTML = "";
+
+    try {
+      // Populate profile selector on first load
+      if (!galleryLoaded) {
+        var profRes = await fetch("/api/profiles");
+        if (profRes.ok) {
+          var profiles = await profRes.json();
+          galleryProfileSelect.innerHTML = profiles.map(function (p) {
+            return '<option value="' + escHtml(p.name) + '"' +
+              (p.name === target ? " selected" : "") + ">" +
+              escHtml(p.label || p.name) + "</option>";
+          }).join("");
+        }
+      }
+
+      var res = await fetch("/api/gallery/" + encodeURIComponent(target));
+      if (!res.ok) throw new Error("Falha ao carregar galeria.");
+      var data = await res.json();
+
+      galleryCurrentProfile = target;
+      galleryLoaded = true;
+
+      var count = data.components.length;
+      gallerySubtitle.textContent = count + " componente" + (count !== 1 ? "s" : "") + " disponíve" + (count !== 1 ? "is" : "l");
+
+      renderGalleryCards(data.components, data.assets);
+    } catch (err) {
+      galleryGrid.innerHTML =
+        '<p style="color:var(--danger);font-size:.875rem;padding:1rem 0">' +
+        escHtml(err.message) + "</p>";
+    } finally {
+      galleryLoading.hidden = true;
+    }
+  }
+
+  function renderGalleryCards(components, assets) {
+    var srcdocBase =
+      '<!DOCTYPE html><html><head><meta charset="utf-8">' +
+      '<meta name="viewport" content="width=device-width,initial-scale=1">' +
+      (assets.css_bootstrap ? '<link rel="stylesheet" href="' + escHtml(assets.css_bootstrap) + '">' : "") +
+      (assets.css ? '<link rel="stylesheet" href="' + escHtml(assets.css) + '">' : "") +
+      "<style>body{margin:0;padding:12px;box-sizing:border-box;}*{box-sizing:border-box;}</style>" +
+      "</head><body>";
+
+    var srcdocScripts =
+      (assets.j_query ? '<script src="' + escHtml(assets.j_query) + '"><\/script>' : "") +
+      (assets.js_bootstrap ? '<script src="' + escHtml(assets.js_bootstrap) + '"><\/script>' : "") +
+      (assets.js ? '<script src="' + escHtml(assets.js) + '"><\/script>' : "") +
+      "</body></html>";
+
+    var html = "";
+    components.forEach(function (comp, i) {
+      var encClass = assets.encapsulation_class ? ' class="' + escHtml(assets.encapsulation_class) + '"' : "";
+      var srcdoc = srcdocBase +
+        '<div' + encClass + '>' + comp.html + '</div>' +
+        srcdocScripts;
+
+      html +=
+        '<div class="gallery-card" style="animation-delay:' + (i * 80) + 'ms">' +
+        '<div class="gallery-card-header">' +
+        '<span class="gallery-card-name">' + escHtml(comp.label) + "</span>" +
+        '<span class="gallery-card-tipo">' + escHtml(comp.tipo) + "</span>" +
+        "</div>" +
+        '<div class="gallery-card-body">' +
+        '<iframe srcdoc="' + srcdoc.replace(/"/g, "&quot;") + '" ' +
+        'sandbox="allow-scripts allow-same-origin" ' +
+        'scrolling="no" frameborder="0" ' +
+        'onload="this.style.height=(this.contentDocument.body.scrollHeight+24)+\'px\'"></iframe>' +
+        "</div></div>";
+    });
+
+    galleryGrid.innerHTML = html;
+
+    // ResizeObserver for auto-height
+    if (window.ResizeObserver) {
+      galleryGrid.querySelectorAll("iframe").forEach(function (iframe) {
+        var ro = new ResizeObserver(function () {
+          try {
+            var h = iframe.contentDocument && iframe.contentDocument.body
+              ? iframe.contentDocument.body.scrollHeight
+              : 0;
+            if (h > 0) iframe.style.height = (h + 24) + "px";
+          } catch (_) {}
+        });
+        iframe.addEventListener("load", function () {
+          try {
+            ro.observe(iframe.contentDocument.body);
+          } catch (_) {}
+        });
+      });
+    }
+  }
+
+  galleryProfileSelect && galleryProfileSelect.addEventListener("change", function () {
+    galleryLoaded = false;
+    loadGallery(galleryProfileSelect.value);
+  });
 
   // ── Init ──────────────────────────────────────────────────
   loadProfiles();
