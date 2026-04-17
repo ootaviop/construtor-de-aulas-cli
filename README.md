@@ -85,26 +85,52 @@ Para parar: `Ctrl+C` ou `docker compose down`.
 
 ## Interface web
 
-Após subir o servidor, a interface permite:
+Após subir o servidor, a interface oferece:
 
-- Upload do arquivo `.docx`
-- Seleção de profile (por curso)
+### Navegação por abas (sidebar)
+
+- **Gerar Aula** — converter `.docx` em HTML interativo
+- **Profiles** — visualizar configurações de cada profile (componentes, assets, metadados)
+- **Templates** — galeria de componentes e suas versões disponíveis
+- **Galeria** — visualização interativa de todos os componentes renderizados com dados de exemplo realistas
+- **Sobre** — informações sobre o sistema
+
+### Funcionalidades no conversor (Gerar Aula)
+
+- Upload do arquivo `.docx` (drag-and-drop ou clique)
+- Seleção de profile (por curso/projeto)
 - Modo teste sem API Claude (modo mock)
-- Preview do HTML gerado
-- Download do arquivo `.html`
+- Loading screen premium com frases rotativas durante a conversão
+- Confetti de celebração ao final da conversão bem-sucedida
+- Preview do HTML gerado por tópico em iframe responsivo
+- **Downloads:**
+  - Baixar tópico individual → `{nome}-{titulo}.html`
+  - **Baixar completo** → `.zip` contendo um `.html` por tópico, nomeados como `{nome}-{titulo-slug}.html`
+
+### Funcionalidades da Galeria
+
+- Seletor dinâmico de profile para prévia dos componentes
+- Renderização de todos os 15 tipos de componentes suportados com dados de exemplo educacionais
+- Iframes isolados para cada componente com CSS/JS do profile injetado
+- Ajuste automático de altura dos iframes conforme o conteúdo
 
 ---
 
 ## Tags suportadas no .docx
 
-```html
-<citacao>texto</citacao>
+### Componentes principais
 
-<atencao>texto</atencao>
+```html
+<citacao>texto da citação</citacao>
+
+<atencao>
+  texto com atenção
+  <!-- pode conter outros componentes aninhados -->
+</atencao>
 
 <carrossel>
-  <carrosselslide>conteúdo</carrosselslide>
-  <carrosselslide>conteúdo</carrosselslide>
+  <carrosselslide>slide 1</carrosselslide>
+  <carrosselslide>slide 2</carrosselslide>
 </carrossel>
 
 <sanfona>
@@ -122,23 +148,121 @@ Após subir o servidor, a interface permite:
 </flipcards>
 ```
 
+### Componentes adicionais
+
+```html
+<topo>
+  <titulotopico>Identificador do tópico (opcional)</titulotopico>
+  <tituloaula>Título principal da aula (opcional)</tituloaula>
+</topo>
+
+<videoplayer>https://player.vimeo.com/video/123456789</videoplayer>
+
+<listacheck>
+  <ul>
+    <li>Item 1</li>
+    <li>Item 2</li>
+  </ul>
+</listacheck>
+
+<listanumero>
+  <ol>
+    <li>Primeiro passo</li>
+    <li>Segundo passo</li>
+  </ol>
+</listanumero>
+
+<listaletra>
+  <ol>
+    <li>Item A</li>
+    <li>Item B</li>
+  </ol>
+</listaletra>
+
+<podcast>
+  <podcasturl>https://w.soundcloud.com/player/?url=...</podcasturl>
+  <podcastnome>Nome do palestrante</podcastnome>
+  <podcasttema>Tema do episódio</podcasttema>
+  <podcastsobre>Bio ou descrição do especialista</podcastsobre>
+  <podcastpdf>https://exemplo.com/transcricao.pdf</podcastpdf>
+  <!-- opcional -->
+</podcast>
+
+<spanmodal>
+  <spanmodaltrigger>Texto clicável</spanmodaltrigger>
+  <spanmodalcorpo>Conteúdo do modal</spanmodalcorpo>
+</spanmodal>
+
+<imagem>Descrição alternativa da imagem</imagem>
+
+<modalcard>
+  <modalcarditem>
+    <modalcardtitulo>Título do card</modalcardtitulo>
+    <modalcarddescricao>Descrição breve</modalcarddescricao>
+    <modalcardconteudo>Conteúdo completo do modal</modalcardconteudo>
+  </modalcarditem>
+</modalcard>
+
+<referencias>
+  <p><strong>AUTOR, A.</strong> Título da obra. Cidade: Editora, 2024.</p>
+  <p><strong>OUTRO, B.</strong> Outra obra. Cidade: Editora, 2024.</p>
+</referencias>
+
+<secao>
+  <!-- agrupar componentes com espaçamento padrão -->
+</secao>
+
+<topico>
+  <!-- delimita uma seção independente do documento -->
+</topico>
+```
+
+### Sobre componentes aninhados
+
+Componentes como `<atencao>` podem conter outros componentes e parágrafos internamente:
+
+```html
+<atencao>
+  <citacao>Citação importante dentro do atenção</citacao>
+  <p>Parágrafo de contexto.</p>
+  <listanumero
+    ><ol>
+      <li>Passo 1</li>
+      <li>Passo 2</li>
+    </ol></listanumero
+  >
+  <carrossel>
+    <carrosselslide>Slide 1</carrosselslide>
+    <carrosselslide>Slide 2</carrosselslide>
+  </carrossel>
+</atencao>
+```
+
+O sistema renderizará os componentes internos automaticamente na ordem em que aparecem.
+
 ---
 
 ## Estrutura
 
 ```
-construtor/
-├── construtor_cli.py      # Pipeline principal
-├── api.py                 # Servidor FastAPI (web + endpoints)
-├── web/index.html         # Interface web
-├── profiles/*.json        # Configurações por curso
-├── templates/*/*.html     # Templates Jinja2
+construtor-de-aulas-cli/
+├── construtor_cli.py           # Pipeline principal
+├── api.py                      # Servidor FastAPI (web + endpoints)
+├── web/
+│   ├── index.html              # Interface web (SPA)
+│   └── assets/css/js/          # Estilos e scripts da interface
+├── profiles/*.json             # Configurações por curso/projeto
+├── templates/*/*.html          # Templates Jinja2 por componente
+├── construtor-tags-extension/  # Extensão Chrome para inserção de tags
+│   ├── manifest.json
+│   ├── background.js
+│   ├── sidepanel.html/css/js
 ├── Dockerfile
 ├── docker-compose.yml
-├── .env                   # Chave de API (não commitado)
-├── examples/              # Arquivos de exemplo
-├── tests/                 # Scripts de teste
-└── tools/                 # Utilitários (gerar_template.py)
+├── .env                        # Chave de API (não commitado)
+├── examples/                   # Arquivos de exemplo
+├── tests/                      # Scripts de teste
+└── tools/                      # Utilitários (gerar_template.py)
 ```
 
 ---
@@ -171,10 +295,38 @@ pip install -r requirements.txt
 uvicorn api:app --reload --port 8000
 ```
 
-# Próximas modificações
+---
 
-- [ ] Construir menu de opções na interface
-  - [ ] Listar profiles
-  - [ ] Criar aula
+# Roadmap
 
-- [ ] Rodar LLM localmente (sem API Claude)
+## Em andamento
+
+
+- [ ] Associar no `default.json` todos os componentes do Ser Docente
+
+## Concluído
+
+- [x] Separação por tópico (`<topico></topico>`)
+- [x] Prompt instrui a IA a corrigir tags digitadas incorretamente
+- [x] Loading screen com mensagens rotativas durante a conversão
+- [x] Confetti de celebração ao final da conversão
+- [x] Finalizar todos os componentes do Ser Docente (templates + registro no profile)
+- [x] Galeria interativa de componentes por profile
+- [x] Download de tópico individual e download completo em `.zip`
+- [x] **Extensão de navegador** — painel lateral Chrome com snippets de todas as tags; clicar em qualquer parte do card copia o snippet para a área de transferência (ver `construtor-tags-extension/`)
+
+## Planejado
+
+- [ ] **Transformação de conteúdo via LLM local** — o autor cola conteúdo informal na extensão, escolhe o componente alvo (ex: Sanfona) e a extensão reformata para o padrão correto de tags. Será servido por um servidor interno da empresa (Ollama + Qwen/Llama), sem depender de API externa, mantendo os conteúdos dentro da rede da organização.
+- [ ] Suporte a múltiplos projetos com banco de dados
+
+## MyBuilder (futuro)
+
+Segundo módulo do sistema, dedicado à criação da identidade visual e geração de assets por projeto/curso:
+
+- **Criação de projeto**: nome, paleta de cores, caminhos de imagens, versão de cada componente
+- **Build de assets**: geração automática da estrutura de pastas e dos bundles CSS/JS
+- **Preview por componente**: visualização da versão escolhida com a paleta do projeto
+- **Download**: backend entrega o pacote completo pronto para uso
+
+O arquivo `profiles/*.json` é o contrato entre os dois módulos — o MyBuilder escreve, o Construtor lê.

@@ -10,7 +10,7 @@ services:
   construtor:
     image: midiadigital/construtor-aulas:latest
     ports:
-      - "8000:8000"
+      - "8001:8000"
     env_file:
       - .env
 EOF

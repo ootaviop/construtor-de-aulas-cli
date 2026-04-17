@@ -1,53 +1,47 @@
 {# Template: flipcards/m1v1.html #}
-{# Dados esperados: { 
-     id: string, 
-     cards: [ 
-       { 
-         frente: string (HTML), 
+{# Dados esperados: {
+     id: string,
+     cards: [
+       {
+         frente: string (HTML),
          verso: string (HTML),
          aria_label: string (opcional)
-       }, 
-       ... 
+       },
+       ...
      ],
      imagem_textura: string (URL, opcional - usa padrão se não fornecido)
-   } 
+   }
 #}
 
 {% set imagem = imagem_textura | default('https://recursos-moodle.caeddigital.net/projetos/cursos/MG/BH/2025-1/assets/img/textura-modal1.png') %}
 
-<div class="container secao flipcards-m1v1" id="{{ id }}">
-    <div class="row">
-        <div class="col-sm-12 col-md-11 col-lg-11 col-xl-9 m-auto">
-            <div class="flip-cards dica">
-                <p>💡 Passe o mouse sobre {{ 'os cards' if cards|length > 1 else 'o card' }}</p>
-            </div>
-            <div class="flip-cards justify-start mb-4 mt-0">
-                {% for card in cards %}
-                <div class="flip-card" aria-label="{{ card.aria_label | default('Card ' ~ loop.index) }}">
-                    <div class="flip-card__inner">
-                        {# Frente do card #}
-                        <div class="flip-card__face flip-card__front">
-                            <div class="flip-card__image">
-                                <img class="img-fluid" src="{{ imagem }}" alt="">
-                            </div>
-                            <div class="flip-card__content">
-                                <div class="flip-card__title">
-                                    {{ card.frente | safe }}
-                                </div>
-                                <div class="flip-card__icon"></div>
-                            </div>
-                        </div>
-                        
-                        {# Verso do card #}
-                        <div class="flip-card__face flip-card__back">
-                            <div class="flip-card__description">
-                                {{ card.verso | safe }}
-                            </div>
-                        </div>
-                    </div>
+<div class="flip-cards dica">
+    <p>💡 Passe o mouse sobre {{ 'os cards' if cards|length > 1 else 'o card' }}</p>
+</div>
+<div class="flip-cards justify-start mb-4 mt-0">
+    {% for card in cards %}
+    <div class="flip-card" aria-label="{{ card.aria_label | default('Card ' ~ loop.index) }}">
+        <div class="flip-card__inner">
+            {# Frente do card #}
+            <div class="flip-card__face flip-card__front">
+                <div class="flip-card__image">
+                    <img class="img-fluid" src="{{ imagem }}" alt="">
                 </div>
-                {% endfor %}
+                <div class="flip-card__content">
+                    <div class="flip-card__title">
+                        {{ card.frente | safe }}
+                    </div>
+                    <div class="flip-card__icon"></div>
+                </div>
+            </div>
+
+            {# Verso do card #}
+            <div class="flip-card__face flip-card__back">
+                <div class="flip-card__description">
+                    {{ card.verso | safe }}
+                </div>
             </div>
         </div>
     </div>
+    {% endfor %}
 </div>

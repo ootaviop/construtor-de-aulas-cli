@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "Construtor de Aulas — Tags",
+  "version": "1.0",
+  "description": "Snippets de tags para o Construtor de Aulas CAEd. Clique em uma tag para copiar o snippet para a área de transferência.",
+  "permissions": ["sidePanel", "clipboardWrite"],
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "action": {
+    "default_title": "Abrir painel de tags"
+  },
+  "background": {
+    "service_worker": "background.js"
+  }
+}

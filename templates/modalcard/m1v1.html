@@ -1,0 +1,54 @@
+{# Template: modalcard/m1v1.html #}
+{# Dados esperados: {
+     id: string,
+     cards: [
+       {
+         titulo: string,      (título na face frontal e no cabeçalho do modal)
+         descricao: string,   (texto curto na face traseira do card)
+         conteudo: string,    (HTML do corpo do modal; pode conter múltiplos <p>)
+       }
+     ]
+   }
+#}
+
+<div class="d-flex justify-content-center flip-cards dica" data-hint="Passe o mouse sobre os cards">
+    <p>💡 Passe o mouse sobre os cards</p>
+</div>
+<div class="modal-cards" style="justify-content: flex-start;margin-bottom: 1rem;margin-top: 0!important;">
+    {% for card in cards %}
+    <div class="modal-card" aria-label="Informações sobre {{ card.titulo }}" data-toggle="modal" data-target="#modalcard-{{ id }}-{{ loop.index }}">
+        <div class="modal-card__inner">
+            <div class="modal-card__face modal-card__front">
+                <div class="modal-card__image"></div>
+                <div class="modal-card__content">
+                    <p class="modal-card__title">{{ card.titulo }}</p>
+                    <div class="modal-card__icon"></div>
+                </div>
+            </div>
+            <div class="modal-card__face modal-card__back">
+                <p class="modal-card__description">{{ card.descricao }}</p>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+<div class="separador-medio"></div>
+
+{% for card in cards %}
+<div id="modalcard-{{ id }}-{{ loop.index }}" class="modal fade" role="dialog" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header c-aula-container curso">
+                <h4 class="modal-title">{{ card.titulo }}</h4>
+                <button class="close" type="button" aria-label="Close" data-dismiss="modal"><span aria-hidden="true">×</span></button>
+            </div>
+            <div class="modal-body c-aula-container curso">
+                {{ card.conteudo | safe }}
+            </div>
+            <div class="modal-footer c-aula-container curso">
+                <button class="btn btn-light" type="button" data-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
