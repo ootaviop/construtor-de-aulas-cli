@@ -430,7 +430,7 @@ def extract_with_claude(html: str, api_key: str | None = None, verbose: bool = F
     prompt = EXTRACTION_PROMPT.format(html_content=html)
 
     message = client.messages.create(
-        model="claude-sonnet-4-20250514",
+        model="claude-haiku-4-5-20251001",
         max_tokens=8192,
         messages=[
             {"role": "user", "content": prompt}
