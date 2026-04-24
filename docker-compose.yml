@@ -1,6 +1,6 @@
 services:
   construtor:
-    build: .
+    build: midiadigital/construtor-de-aulas:latest
     ports:
       - "8001:8001"
     env_file:
